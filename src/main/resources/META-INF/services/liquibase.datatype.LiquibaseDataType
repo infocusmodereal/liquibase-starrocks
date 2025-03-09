@@ -1,0 +1,4 @@
+liquibase.ext.starrocks.datatype.StarRocksVarcharType
+liquibase.ext.starrocks.datatype.StarRocksIntType
+liquibase.ext.starrocks.datatype.StarRocksDecimalType
+liquibase.ext.starrocks.datatype.StarRocksDateTimeType

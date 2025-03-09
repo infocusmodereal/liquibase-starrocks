@@ -25,3 +25,7 @@ gradle-app.setting
 
 # Visual Studio Code
 .vscode/
+
+# Gradle properties file with credentials
+gradle.properties
+secret-key.asc
