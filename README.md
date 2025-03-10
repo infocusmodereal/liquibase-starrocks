@@ -46,7 +46,7 @@ liquibase-starrocks/
 
 To test this extension with Liquibase CLI, follow these steps:
 
-1. **Download Liquibase CLI**:
+1. **Download Liquibase CLI** (make sure you have Java installed to run Liquibase):
    ```bash
    curl -L https://github.com/liquibase/liquibase/releases/download/v4.23.0/liquibase-4.23.0.zip -o liquibase.zip
    unzip liquibase.zip -d liquibase
@@ -91,22 +91,16 @@ To test this extension with Liquibase CLI, follow these steps:
                sql: |
                  CREATE TABLE test_table (
                    id INT NOT NULL,
-                   name VARCHAR(255),
-                   UNIQUE KEY(id)
+                   name VARCHAR(255)
                  ) ENGINE = OLAP
-                 DISTRIBUTED BY HASH(id) BUCKETS 10
+                 PRIMARY KEY (`id`)
+                 DISTRIBUTED BY HASH(`id`)
                  PROPERTIES ('replication_num' = '1');
    ```
 
-   > **Note**: StarRocks has specific syntax for creating tables:
-   > - Use `UNIQUE KEY(column1, column2, ...)` after the column definitions to create a primary key, not within the column definitions
-   > - Use `DISTRIBUTED BY HASH(column)` to specify the distribution key
-   > - Set appropriate `BUCKETS` and `replication_num` values based on your cluster configuration
-   > - StarRocks only supports UPDATE operations on tables with a UNIQUE KEY defined
-
 7. **Run Liquibase update**:
    ```bash
-   ./liquibase/liquibase update
+   ./liquibase/liquibase update --changelog-file=changelog.yaml
    ```
 
 8. **Verify the changes in StarRocks**:
