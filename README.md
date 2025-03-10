@@ -80,6 +80,10 @@ To test this extension with Liquibase CLI, follow these steps:
    changeLogFile=changelog.yaml
    ```
 
+**IMPORTANT:** The extension will try to figure out if this is StarRocks database by checking if the URL of the 
+connection contains either the key starrocks or the default port 9030. This is necessary so that Liquibase does not 
+attempt to treat this as a MySQL connection.
+
 6. **Create a changelog file (changelog.yaml)**:
    ```yaml
    databaseChangeLog:

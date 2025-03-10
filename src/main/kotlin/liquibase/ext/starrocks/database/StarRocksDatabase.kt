@@ -50,6 +50,11 @@ class StarRocksDatabase : AbstractJdbcDatabase() {
             return true
         }
 
+        // If using MySQL driver, check the port for StarRocks default port in the URL
+        if (url != null && url.contains("$DEFAULT_PORT")) {
+            return true
+        }
+
         // Try to detect StarRocks by checking version information
         try {
             val versionInfo = conn.getDatabaseProductVersion()
