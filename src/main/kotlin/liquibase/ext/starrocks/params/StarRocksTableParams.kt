@@ -1,9 +1,4 @@
 /*-
- * #%L
- * Liquibase extension for StarRocks
- * %%
- * Copyright (C) 2023 - 2024
- * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +10,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * #L%
  */
 package liquibase.ext.starrocks.params
 
@@ -37,7 +31,7 @@ class StarRocksTableParams {
         engine?.let { sql.append(" ENGINE = $it") }
 
         key_desc?.let { sql.append(" PRIMARY KEY ($it)") }
-        
+
         if (properties.isNotEmpty()) {
             sql.append(" PROPERTIES (")
             sql.append(properties.entries.joinToString(", ") { (key, value) -> "\"$key\"=\"$value\"" })
