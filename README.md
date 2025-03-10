@@ -61,7 +61,7 @@ To test this extension with Liquibase CLI, follow these steps:
 
 3. **Copy the extension JAR to Liquibase's lib directory**:
    ```bash
-   cp build/libs/liquibase-starrocks-0.1.0.jar liquibase/lib/
+   cp build/libs/liquibase-starrocks-0.1.1.jar liquibase/lib/
    ```
 
 4. **Copy the MySQL connector to Liquibase's lib directory**:
