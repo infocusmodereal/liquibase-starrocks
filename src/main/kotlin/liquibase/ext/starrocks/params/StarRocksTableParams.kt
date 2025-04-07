@@ -30,7 +30,9 @@ class StarRocksTableParams {
 
         engine?.let { sql.append(" ENGINE = $it") }
 
-        key_desc?.let { sql.append(" PRIMARY KEY ($it)") }
+        key_desc?.let { sql.append(" DUPLICATE KEY ($it)") }
+
+        distributedBy?.let { sql.append(" DISTRIBUTED BY ($it)") }
 
         if (properties.isNotEmpty()) {
             sql.append(" PROPERTIES (")
