@@ -32,6 +32,8 @@ class StarRocksTableParams {
 
         key_desc?.let { sql.append(" PRIMARY KEY ($it)") }
 
+        distributedBy?.let { sql.append(" DISTRIBUTED BY $it") }
+
         if (properties.isNotEmpty()) {
             sql.append(" PROPERTIES (")
             sql.append(properties.entries.joinToString(", ") { (key, value) -> "\"$key\"=\"$value\"" })

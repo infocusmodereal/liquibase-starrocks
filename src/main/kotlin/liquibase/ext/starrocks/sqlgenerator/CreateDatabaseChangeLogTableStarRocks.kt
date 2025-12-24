@@ -43,6 +43,7 @@ class CreateDatabaseChangeLogTableStarRocks : CreateDatabaseChangeLogTableGenera
         val tableParams = StarRocksTableParams()
         tableParams.engine = "OLAP"
         tableParams.key_desc = "ID, AUTHOR, FILENAME"
+        tableParams.distributedBy = "HASH(ID) BUCKETS 1"
         tableParams.properties = mapOf("replication_num" to "1")
 
         // StarRocks syntax for creating a table with a composite primary key
