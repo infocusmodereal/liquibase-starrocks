@@ -139,6 +139,7 @@ signing {
 tasks.register("generateChecksumsAndSignatures") {
     group = "publishing"
     description = "Generates MD5, SHA1 checksums and GPG signatures for each artifact."
+    dependsOn("jar", "shadowJar", "sourcesJar", "javadocJar", "generatePomFileForMavenPublication")
     doLast {
         // Define the base file name (ensure this matches your artifact naming)
         val baseName = "liquibase-starrocks-${project.version}"
@@ -188,7 +189,7 @@ tasks.register("generateChecksumsAndSignatures") {
 tasks.register<Zip>("createCentralBundle") {
     group = "publishing"
     description = "Creates a ZIP bundle for deployment including artifacts, checksums, and signatures."
-    dependsOn("generateChecksumsAndSignatures")
+    dependsOn("generateChecksumsAndSignatures", "jar", "shadowJar", "sourcesJar", "javadocJar", "generatePomFileForMavenPublication")
     archiveFileName.set("central-bundle.zip")
     destinationDirectory.set(file("$buildDir/distributions"))
 
