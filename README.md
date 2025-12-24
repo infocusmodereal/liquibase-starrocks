@@ -56,6 +56,10 @@ To clean up:
 docker compose -f docker-compose.integration.yml down -v
 ```
 
+### Publishing
+
+See `PUBLISHING.md` for the Maven Central release workflow.
+
 ## Testing with Liquibase CLI
 
 To test this extension with Liquibase CLI, follow these steps:
