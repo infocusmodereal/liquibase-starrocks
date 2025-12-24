@@ -1,0 +1,28 @@
+services:
+  starrocks:
+    image: ${STARROCKS_IMAGE:-starrocks/allin1-ubuntu:3.1.7}
+    command: ["/bin/sh", "-c", "rm -f /data/deploy/starrocks/fe/bin/fe.pid && ./entrypoint.sh"]
+    ports:
+      - "9030:9030"
+      - "8030:8030"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+  integration:
+    build:
+      context: .
+      dockerfile: integration/Dockerfile
+    depends_on:
+      - starrocks
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      - STARROCKS_HOST=starrocks
+      - STARROCKS_PORT=9030
+      - INTEGRATION_LIQUIBASE_VERSION=4.23.0
+      - MYSQL_DRIVER_VERSION=8.4.0
+      - GRADLE_USER_HOME=/workspace/.gradle
+    command: ["bash", "integration/run-integration.sh"]

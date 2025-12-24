@@ -42,6 +42,20 @@ liquibase-starrocks/
 ./gradlew test
 ```
 
+### Integration Testing (Docker Compose)
+
+This spins up StarRocks and runs Liquibase against it using the plugin.
+
+```bash
+docker compose -f docker-compose.integration.yml up --build --abort-on-container-exit --exit-code-from integration
+```
+
+To clean up:
+
+```bash
+docker compose -f docker-compose.integration.yml down -v
+```
+
 ## Testing with Liquibase CLI
 
 To test this extension with Liquibase CLI, follow these steps:

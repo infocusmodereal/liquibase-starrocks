@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: integration
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE plugin_integration (
+                id INT NOT NULL,
+                name VARCHAR(255)
+              ) ENGINE = OLAP
+              PRIMARY KEY (`id`)
+              DISTRIBUTED BY HASH(`id`)
+              PROPERTIES ('replication_num' = '1');

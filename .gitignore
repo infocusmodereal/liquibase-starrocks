@@ -29,3 +29,6 @@ gradle-app.setting
 # Gradle properties file with credentials
 gradle.properties
 secret-key.asc
+
+# Integration test artifacts
+integration/.cache/
