@@ -65,7 +65,11 @@ fi
 cp "$jar_path" "$liquibase_dir/lib/"
 cp "$mysql_jar" "$liquibase_dir/lib/"
 
-"$liquibase_dir/liquibase" --defaultsFile=integration/liquibase.properties update
+first_run_log="$cache_dir/liquibase-first-run.log"
+second_run_log="$cache_dir/liquibase-second-run.log"
+
+"$liquibase_dir/liquibase" --defaultsFile=integration/liquibase.properties update \
+  2>&1 | tee "$first_run_log"
 
 table_name="plugin_integration"
 table_found="$(mysql --protocol=TCP -h "$starrocks_host" -P "$starrocks_port" -u root \
@@ -73,6 +77,39 @@ table_found="$(mysql --protocol=TCP -h "$starrocks_host" -P "$starrocks_port" -u
 
 if [ "$table_found" != "$table_name" ]; then
   echo "Integration test failed: table '${table_name}' not found."
+  exit 1
+fi
+
+# Second (idempotent) run — triggers AbstractUpdateCommandStep's fast-check path, which
+# skips acquireLock() but still calls releaseLock() in its finally block. Without the
+# hasChangeLogLock() gate in StarRocksLockService, that fires the extension's
+# WHERE ID = 1 AND LOCKED = true release UPDATE against a row that already has LOCKED=false,
+# matches 0 rows, and StandardLockService.releaseLock throws LockException — logged SEVERE.
+"$liquibase_dir/liquibase" --defaultsFile=integration/liquibase.properties update \
+  2>&1 | tee "$second_run_log"
+
+if grep -q "Could not release lock" "$second_run_log"; then
+  echo "Integration test failed: 'Could not release lock' appeared in the second-run log."
+  echo "This is the regression the hasChangeLogLock() gate in StarRocksLockService prevents."
+  exit 1
+fi
+
+if grep -qi "SEVERE" "$second_run_log"; then
+  echo "Integration test failed: unexpected SEVERE log line on an up-to-date second run."
+  grep -i "SEVERE" "$second_run_log" | head -5
+  exit 1
+fi
+
+# The DATABASECHANGELOGLOCK row must end in LOCKED = 0 with no LOCKEDBY / LOCKGRANTED set —
+# the lock state stayed consistent even though acquireLock was skipped on the second run.
+lock_state="$(mysql --protocol=TCP -h "$starrocks_host" -P "$starrocks_port" -u root \
+  -D liquibase_test -N -e \
+  "SELECT CONCAT(LOCKED, '|', COALESCE(LOCKEDBY,'null'), '|', COALESCE(LOCKGRANTED,'null')) \
+   FROM DATABASECHANGELOGLOCK WHERE ID = 1;" || true)"
+
+if [ "$lock_state" != "0|null|null" ]; then
+  echo "Integration test failed: DATABASECHANGELOGLOCK ended in unexpected state '$lock_state'."
+  echo "Expected '0|null|null' (LOCKED=0, LOCKEDBY=null, LOCKGRANTED=null)."
   exit 1
 fi
 

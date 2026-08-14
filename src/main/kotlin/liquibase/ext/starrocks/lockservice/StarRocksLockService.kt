@@ -17,6 +17,7 @@ import liquibase.Scope
 import liquibase.database.Database
 import liquibase.exception.DatabaseException
 import liquibase.exception.LiquibaseException
+import liquibase.exception.LockException
 import liquibase.exception.UnexpectedLiquibaseException
 import liquibase.executor.Executor
 import liquibase.executor.ExecutorService
@@ -35,6 +36,31 @@ class StarRocksLockService : StandardLockService() {
     override fun getPriority(): Int = PRIORITY_DATABASE
 
     override fun supports(database: Database): Boolean = database is StarRocksDatabase
+
+    /**
+     * Skip the release UPDATE entirely when no lock is currently held by this instance.
+     *
+     * `UnlockDatabaseChangelogStarRocks` deliberately narrows the release SQL to
+     * `WHERE ID = 1 AND LOCKED = true`, which prevents one Liquibase process from clearing
+     * another process's active lock. That guard interacts badly with
+     * `AbstractUpdateCommandStep`'s fast-check optimisation: when a re-run finds no un-run
+     * changesets, `acquireLock()` is skipped but the finally-block still invokes
+     * `releaseLock()`. On StarRocks the release UPDATE then matches 0 rows and
+     * `StandardLockService.releaseLock` throws `LockException` — Liquibase's only compensation
+     * for a zero-row release is MySQL-specific (`instanceof MySQLDatabase`), and
+     * `StarRocksDatabase` extends `AbstractJdbcDatabase` directly, so it doesn't apply.
+     *
+     * Gating on `hasChangeLogLock` here is safe: `super.acquireLock()` sets the flag to true
+     * on success and `super.releaseLock()` clears it, so an early return only fires when this
+     * instance genuinely never acquired the lock. Nothing to release ⇒ nothing to log.
+     */
+    @Throws(LockException::class)
+    override fun releaseLock() {
+        if (!hasChangeLogLock()) {
+            return
+        }
+        super.releaseLock()
+    }
 
     override fun isDatabaseChangeLogLockTableInitialized(tableJustCreated: Boolean): Boolean {
         if (!isLockTableInitialized) {
