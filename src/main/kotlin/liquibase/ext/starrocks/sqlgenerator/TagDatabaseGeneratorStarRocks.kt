@@ -52,23 +52,14 @@ class TagDatabaseGeneratorStarRocks : TagDatabaseGenerator() {
             .fromObject(statement.tag, database)
             .objectToSql(statement.tag, database)
 
-        // Use standard UPDATE syntax for StarRocks
-        val updateQuery = """
-            UPDATE $tableNameEscaped
-            SET TAG = $tagEscaped
-            WHERE $dateColumnNameEscaped = (
-                SELECT $dateColumnNameEscaped 
-                FROM $tableNameEscaped 
-                ORDER BY $dateColumnNameEscaped DESC, $orderColumnNameEscaped DESC 
-                LIMIT 1
-            )
-            AND $orderColumnNameEscaped = (
-                SELECT $orderColumnNameEscaped 
-                FROM $tableNameEscaped 
-                ORDER BY $dateColumnNameEscaped DESC, $orderColumnNameEscaped DESC 
-                LIMIT 1
-            )
-        """.trimIndent()
+        // ORDEREXECUTED can repeat across deployments and DATETIME has second precision.
+        // Select one complete identity with a stable tie-break, rather than tagging
+        // every row sharing the last timestamp/order pair.
+        val ordering = "$dateColumnNameEscaped DESC, $orderColumnNameEscaped DESC, ID DESC, AUTHOR DESC, FILENAME DESC"
+        val identity = listOf("ID", "AUTHOR", "FILENAME").joinToString(" AND ") { column ->
+            "$column = (SELECT $column FROM $tableNameEscaped ORDER BY $ordering LIMIT 1)"
+        }
+        val updateQuery = "UPDATE $tableNameEscaped SET TAG = $tagEscaped WHERE $identity"
 
         return arrayOf(UnparsedSql(updateQuery))
     }

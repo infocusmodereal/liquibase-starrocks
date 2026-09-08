@@ -15,6 +15,7 @@ package liquibase.ext.starrocks.sqlgenerator
 
 import liquibase.database.Database
 import liquibase.ext.starrocks.database.StarRocksDatabase
+import liquibase.ext.starrocks.configuration.StarRocksConfiguration
 import liquibase.ext.starrocks.params.StarRocksTableParams
 import liquibase.sql.Sql
 import liquibase.sql.UnparsedSql
@@ -39,17 +40,19 @@ class CreateDatabaseChangeLogTableStarRocks : CreateDatabaseChangeLogTableGenera
         database: Database,
         sqlGeneratorChain: SqlGeneratorChain<CreateDatabaseChangeLogTableStatement>
     ): Array<Sql> {
-        val tableName = database.databaseChangeLogTableName
+        val tableName = database.escapeTableName(
+            database.liquibaseCatalogName, database.liquibaseSchemaName, database.databaseChangeLogTableName
+        )
         val tableParams = StarRocksTableParams()
         tableParams.engine = "OLAP"
         tableParams.key_desc = "ID, AUTHOR, FILENAME"
         tableParams.distributedBy = "HASH(ID) BUCKETS 1"
-        tableParams.properties = mapOf("replication_num" to "1")
+        tableParams.properties = mapOf("replication_num" to StarRocksConfiguration.metadataReplication())
 
         // StarRocks syntax for creating a table with a composite primary key
         // See: https://docs.starrocks.io/docs/sql-reference/sql-statements/table_bucket_part_index/CREATE_TABLE/
         val createTableQuery = """
-            CREATE TABLE IF NOT EXISTS `${database.defaultSchemaName}`.${tableName} (
+            CREATE TABLE IF NOT EXISTS ${tableName} (
                 ID VARCHAR(255) NOT NULL,
                 AUTHOR VARCHAR(255) NOT NULL,
                 FILENAME VARCHAR(255) NOT NULL,

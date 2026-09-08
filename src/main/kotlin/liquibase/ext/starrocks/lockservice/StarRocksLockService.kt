@@ -49,16 +49,21 @@ class StarRocksLockService : StandardLockService() {
     @Throws(LockException::class, DatabaseException::class)
     override fun forceReleaseLock() {
         init()
-        super.releaseLock()
+        val locked = getExecutor().queryForObject(
+            liquibase.statement.core.SelectFromDatabaseChangeLogLockStatement("LOCKED"),
+            Boolean::class.javaObjectType
+        )
+        if (locked == true) super.releaseLock()
     }
 
     override fun isDatabaseChangeLogLockTableInitialized(tableJustCreated: Boolean): Boolean {
         if (!isLockTableInitialized) {
             try {
-                val query = String.format(
-                    "SELECT COUNT(*) FROM `%s`.%s",
-                    database.defaultSchemaName, database.databaseChangeLogLockTableName
+                val table = database.escapeTableName(
+                    database.liquibaseCatalogName, database.liquibaseSchemaName,
+                    database.databaseChangeLogLockTableName
                 )
+                val query = "SELECT COUNT(*) FROM $table WHERE ID = 1"
                 val nbRows = getExecutor().queryForInt(RawSqlStatement(query))
                 isLockTableInitialized = nbRows > 0
             } catch (e: LiquibaseException) {
@@ -70,6 +75,16 @@ class StarRocksLockService : StandardLockService() {
             }
         }
         return isLockTableInitialized
+    }
+
+    override fun reset() {
+        isLockTableInitialized = false
+        super.reset()
+    }
+
+    override fun setDatabase(database: Database) {
+        isLockTableInitialized = false
+        super.setDatabase(database)
     }
 
     private fun getExecutor(): Executor {

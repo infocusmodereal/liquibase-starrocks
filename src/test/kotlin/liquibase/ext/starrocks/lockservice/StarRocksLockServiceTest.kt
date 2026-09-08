@@ -76,6 +76,8 @@ class StarRocksLockServiceTest {
 
     @Test
     fun `fresh service can force release an abandoned lock`() {
+        `when`(executor.queryForObject(any(SelectFromDatabaseChangeLogLockStatement::class.java),
+            eq(Boolean::class.javaObjectType))).thenReturn(true)
         assertFalse(service.hasChangeLogLock())
         service.forceReleaseLock()
         verify(service).init()
@@ -93,6 +95,8 @@ class StarRocksLockServiceTest {
 
     @Test
     fun `forced release errors propagate`() {
+        `when`(executor.queryForObject(any(SelectFromDatabaseChangeLogLockStatement::class.java),
+            eq(Boolean::class.javaObjectType))).thenReturn(true)
         `when`(executor.update(any(UnlockDatabaseChangeLogStatement::class.java)))
             .thenThrow(DatabaseException("simulated update failure"))
         assertThrows(LockException::class.java) { service.forceReleaseLock() }
@@ -104,4 +108,20 @@ class StarRocksLockServiceTest {
         `when`(executor.update(any(UnlockDatabaseChangeLogStatement::class.java))).thenReturn(0)
         assertThrows(LockException::class.java) { service.releaseLock() }
     }
+    @Test
+    fun `force release of an already unlocked table is idempotent`() {
+        service.forceReleaseLock()
+        verify(executor, never()).update(any(UnlockDatabaseChangeLogStatement::class.java))
+    }
+
+    @Test
+    fun `reset invalidates initialization state before reconnect`() {
+        `when`(executor.queryForInt(any(liquibase.statement.core.RawSqlStatement::class.java)))
+            .thenReturn(1, 0)
+        assertTrue(service.isDatabaseChangeLogLockTableInitialized(false))
+        service.reset()
+        assertFalse(service.isDatabaseChangeLogLockTableInitialized(false))
+        verify(executor, times(2)).queryForInt(any(liquibase.statement.core.RawSqlStatement::class.java))
+    }
+
 }

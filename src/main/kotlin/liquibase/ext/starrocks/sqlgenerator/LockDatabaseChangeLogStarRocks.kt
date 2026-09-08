@@ -37,20 +37,16 @@ class LockDatabaseChangeLogStarRocks : LockDatabaseChangeLogGenerator() {
         database: Database,
         sqlGeneratorChain: SqlGeneratorChain<LockDatabaseChangeLogStatement>
     ): Array<Sql> {
-        val tableName = database.databaseChangeLogLockTableName
-        val schemaName = database.defaultSchemaName
+        val tableName = database.escapeTableName(
+            database.liquibaseCatalogName, database.liquibaseSchemaName, database.databaseChangeLogLockTableName
+        )
 
         // Format the host information
-        val host = "$hostname $hostDescription ($hostaddress)"
+        val host = database.escapeStringForDatabase("$hostname $hostDescription ($hostaddress)")
 
         // Use standard UPDATE syntax for StarRocks
-        val lockQuery = """
-            UPDATE `$schemaName`.$tableName 
-            SET LOCKED = true, 
-                LOCKEDBY = '$host', 
-                LOCKGRANTED = ${StarRocksDatabase.CURRENT_DATE_TIME_FUNCTION} 
-            WHERE ID = 1 AND LOCKED = false
-        """.trimIndent()
+        val lockQuery = "UPDATE $tableName SET LOCKED = true, LOCKEDBY = '$host', " +
+            "LOCKGRANTED = ${StarRocksDatabase.CURRENT_DATE_TIME_FUNCTION} WHERE ID = 1 AND LOCKED = false"
 
         return arrayOf(UnparsedSql(lockQuery))
     }

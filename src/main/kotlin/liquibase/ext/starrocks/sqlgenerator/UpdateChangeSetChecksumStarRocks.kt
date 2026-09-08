@@ -39,8 +39,9 @@ class UpdateChangeSetChecksumStarRocks : UpdateChangeSetChecksumGenerator() {
         database: Database,
         sqlGeneratorChain: SqlGeneratorChain<UpdateChangeSetChecksumStatement>
     ): Array<Sql> {
-        val tableName = database.databaseChangeLogTableName
-        val schemaName = database.defaultSchemaName
+        val tableName = database.escapeTableName(
+            database.liquibaseCatalogName, database.liquibaseSchemaName, database.databaseChangeLogTableName
+        )
         val changeSet: ChangeSet = statement.changeSet
 
         val newChecksum = changeSet.generateCheckSum(ChecksumVersion.latest()).toString()
@@ -52,8 +53,8 @@ class UpdateChangeSetChecksumStarRocks : UpdateChangeSetChecksumGenerator() {
 
         // Use standard UPDATE syntax for StarRocks
         val updateQuery = """
-            UPDATE `$schemaName`.$tableName 
-            SET MD5SUM = '$newChecksum' 
+            UPDATE $tableName
+            SET MD5SUM = '$newChecksum'
             WHERE ID = '$id'
             AND AUTHOR = '$author'
             AND FILENAME = '$filePath'
