@@ -9,6 +9,12 @@ cache_dir="${CACHE_DIR:-$workspace/integration/.cache}"
 liquibase_version="${INTEGRATION_LIQUIBASE_VERSION:-4.23.0}"
 mkdir -p "$cache_dir"
 
+# Older Liquibase banners omit Java. Record the runtime used by its launcher.
+java_binary="${JAVA_HOME:+$JAVA_HOME/bin/}java"
+java_version="$("$java_binary" -XshowSettings:properties -version 2>&1 | awk '/^[[:space:]]*java.version = / { print $3; exit }')"
+[[ -n "$java_version" ]]
+echo "JAVA_VERSION=$java_version"
+
 sql() {
   mysql --protocol=TCP -h "$starrocks_host" -P "$starrocks_port" -u root "$@"
 }

@@ -18,7 +18,8 @@ log = Path(args.log).read_text()
 assert 'ALL SCENARIOS PASSED (migration-capabilities-v2)' in log
 assert re.search(r'STARROCKS_VERSION=' + re.escape(args.starrocks) + r'(?:-|\s|$)', log)
 assert 'Liquibase Version: ' + args.liquibase in log
-assert 'using Java ' + args.java + '.' in log
+assert (re.search(r'^JAVA_VERSION=' + re.escape(args.java) + r'\.', log, re.MULTILINE)
+        or 'using Java ' + args.java + '.' in log), 'Java runtime evidence is missing'
 jar_sha = hashlib.sha256(Path(args.jar).read_bytes()).hexdigest()
 assert 'CONNECTOR_SHA256=' + jar_sha in log
 image = json.loads(subprocess.check_output(['docker', 'image', 'inspect', args.image]))[0]
