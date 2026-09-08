@@ -1,5 +1,51 @@
 # Compatibility and validation
 
+## 0.3.0 release candidate
+
+The candidate passed the [seven-job CI matrix](https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34289842299)
+on 2026-09-08. All seven tested JARs are byte-identical to the independently
+verified, signed 0.3.0 candidate. The candidate is ready for publication;
+Maven Central upload and public-download verification have not occurred.
+
+| Liquibase runtime | StarRocks | Java | Architecture | Unit tests | Capability suite |
+| --- | --- | --- | --- | --- | --- |
+| 4.23.0 | 3.1.7 | 17 | amd64 | 24 passed | Passed |
+| 4.29.1 | 4.1.1 | 21 | amd64 | 24 passed | Passed |
+| 5.0.3 | 4.1.1 | 21 | amd64 | 24 passed | Passed |
+| 5.0.4 | 3.5.21 | 21 | amd64 | 24 passed | Passed |
+| 5.0.4 | 4.0.14 | 21 | amd64 | 24 passed | Passed |
+| 5.0.4 | 4.1.3 | 21 | amd64 | 24 passed | Passed |
+| 5.0.4 | 4.1.3 | 21 | arm64 | 24 passed | Passed |
+
+Every row uses Linux, MySQL Connector/J 8.4.0 and a single-node all-in-one
+server. The official Liquibase Test Harness 1.0.12 additionally passed its
+native PRIMARY creation, expected SQL, snapshot and rollback case on StarRocks
+4.1.3 for both architectures, using its isolated Liquibase 5.0.3 runtime.
+The exact signed JAR separately passed the full suite locally on Linux arm64,
+Liquibase 5.0.4, StarRocks 4.1.3 and Java 21. A clean checkout without maintainer
+files passed 24 tests and produced the same JAR bytes.
+
+The [version registry](compatibility/releases.json) names the scenarios and
+records actual source commits, dates, image digests and artifact hashes. The
+[release verification record](compatibility/0.3.0-verification.json) also records
+the signed artifacts, bundle, clean build and publication status. CI checks out
+a PR merge commit; its source identity is preserved separately from the local
+artifact build commit. Byte comparison connects that evidence to the candidate.
+
+The suite covers commands, native PRIMARY/DUPLICATE tables, rollback, escaped
+metadata/changeset identity, repeated changes, failure/recovery, tag ties and
+two concurrent CLI processes. See the [capability contract](docs/capabilities.md)
+for boundaries. StarRocks 3.1.7 rejects rename and hyphenated metadata names;
+the tests assert those differences. Multi-node failover, shared-data deployments
+and lossless diff replay are unverified. Earlier development code passed ten
+two-process contention rounds; the final candidate repeats contention in every
+matrix row and in its local signed-artifact test.
+
+Read the [upgrade guide](docs/upgrading-0.3.md) before rollout, especially the
+new CREATE VIEW/DROP VIEW permissions and rejection of silent type changes.
+
+## Historical 0.1.3 validation
+
 Validation on 2026-09-08 for the released 0.1.3 changes. These results
 do not apply retroactively to the published 0.1.2 artifact.
 
@@ -94,16 +140,15 @@ Published 0.2.0 is the separate signed release, built with
 ## Versioned compatibility registry
 
 [compatibility/releases.json](compatibility/releases.json) records the exact
-0.2.0 combinations above, including whether evidence applies to source-built
-code or the signed release artifact. Earlier 0.1.x evidence remains in this
-document; the initial JSON registry does not reconstruct missing provenance.
+0.2.0 and 0.3.0 candidate combinations, including whether evidence applies to
+source-built code or a signed artifact. Earlier 0.1.x evidence remains in this
+document; the registry does not reconstruct missing historical provenance.
 
 A passing row covers only its named scenarios, runtime, driver, JDK,
 architecture and deployment topology. It does not imply support for every
 patch in a version family. A source-built CI pass is not an artifact test.
 Missing image digests and local reports are identified explicitly.
 
-The [0.3 proposal](docs/roadmap-0.3.md) defines candidate versions, capability
-coverage, evidence requirements and the proposed support policy. All new
-combinations remain untested until actual results are recorded. No 0.3 release
-has been published or certified by this planning change.
+The [0.3 roadmap](docs/roadmap-0.3.md) retains the original proposal and records
+its implementation. Candidate versions become verified only after actual results
+are recorded. Passing 0.3.0 evidence above does not announce publication.

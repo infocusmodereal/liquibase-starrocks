@@ -207,8 +207,15 @@ is in [capabilities.md](capabilities.md).
 - Added candidate-driven CI, artifact provenance, signed bundle preparation,
   independent signature verification, and user/contributor/upgrade documentation.
 
-Release validation remains in progress until the final CI matrix and exact
-signed-artifact checks are recorded. Broader diff reconstruction, additional key
+Release validation completed on 2026-09-08: all seven CI tuples passed, each
+with 24 unit tests and the capability suite. The official harness passed on
+both architectures. Every CI JAR matches the signed candidate byte for byte;
+that signed JAR also passed the full local suite. A clean checkout reproduced
+the JAR without maintainer files. Four signatures and all artifact/bundle
+checksums were verified. See [the release record](../compatibility/0.3.0-verification.json).
+Publication and public-download verification are the remaining release actions.
+
+Broader diff reconstruction, additional key
 models, shared-data deployment and multi-node failover remain follow-up scope.
 Replication values above one are configurable, but the single-node matrix does
 not establish multi-node availability behavior. Native async alterations require

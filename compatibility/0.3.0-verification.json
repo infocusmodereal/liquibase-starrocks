@@ -1,114 +1,59 @@
 {
   "schemaVersion": 1,
+  "version": "0.3.0",
+  "status": "ready-unpublished",
   "recordedAt": "2026-09-08",
-  "scope": "0.3.0 validated release candidate and historical 0.2.0 evidence. 0.3.0 is not published.",
-  "scenarios": {
-    "migration-baseline-v1": [
-      "fresh SQL migration",
-      "two no-op updates",
-      "single changelog row",
-      "clear checksums, recalculate and validate",
-      "abandoned lock recovery from a new CLI process",
-      "update after recovery"
-    ],
-    "migration-capabilities-v2": [
-      "all migration-baseline-v1 scenarios",
-      "modifyDataType rejected without recording execution or changing the column",
-      "failed SQL not recorded and lock released",
-      "status, history, list-locks, tag and update-sql without mutation",
-      "native PRIMARY creation, repeated update, checksum regeneration and rollback with escaped changeset identity",
-      "native DUPLICATE creation, default VARCHAR/DECIMAL, duplicate rows and rollback",
-      "snapshot, self diff and generate-changelog inspection",
-      "custom metadata catalog/table names, tag, checksum and rollback",
-      "two CLI processes racing on fresh metadata; one event and one changeset",
-      "YAML/XML include, contexts, labels, SQL preconditions, runAlways and runOnChange",
-      "idempotent recovery, lock timeout retaining ownership, orphan catalog reservation recovery",
-      "tag tie selects exactly one changeset",
-      "add/drop column with completion checks; rename/inverse where available"
-    ]
-  },
-  "limitations": [
-    "Only exact recorded combinations and named scenarios were exercised; unlisted patches are unverified.",
-    "migration-baseline-v1 does not cover rollback, snapshots, concurrent processes or multi-node failover.",
-    "migration-capabilities-v2 covers bounded inspection and two-process contention on single-node servers; it does not establish lossless diff replay, shared-data support or multi-node failover.",
-    "StarRocks 3.1.7 does not support the tested rename operation or hyphenated metadata names; those boundaries are asserted by the suite.",
-    "Historical image digests were not recorded; null does not mean a pinned image.",
-    "Source-built 0.3.0-SNAPSHOT CI JARs were compared byte for byte with the signed 0.3.0 candidate. Detached signatures and publication status are recorded separately.",
-    "Local evidence is distinguished from CI evidence; draft release assets become public only when published."
+  "artifactBuildSourceCommit": "e543ad3d0e7554e6b5ccb8fdaa63379f4f0f71a8",
+  "validationScriptCommit": "f6464e1545c7b0299806caf8750fcd8ce9c882ad",
+  "ciRun": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34289842299",
+  "ciConclusion": "success",
+  "ciJarMatch": "All seven CI JARs are byte-identical to the signed release candidate JAR.",
+  "artifacts": [
+    {
+      "file": "liquibase-starrocks-0.3.0.jar",
+      "bytes": 1917973,
+      "sha256": "f2a6298079658d9d9afa1b054426375d313e21e2ce967682b9e0de2397c35b58",
+      "detachedSignatureVerified": true
+    },
+    {
+      "file": "liquibase-starrocks-0.3.0-sources.jar",
+      "bytes": 28735,
+      "sha256": "f2af75b85b6712a9ac1a04f591b3939b913a177953c214a30a9ba245cb2ff544",
+      "detachedSignatureVerified": true
+    },
+    {
+      "file": "liquibase-starrocks-0.3.0-javadoc.jar",
+      "bytes": 261,
+      "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3",
+      "detachedSignatureVerified": true
+    },
+    {
+      "file": "liquibase-starrocks-0.3.0.pom",
+      "bytes": 1822,
+      "sha256": "d85f954825c07f5fbe14295de8f934a78ff1475bd9ea24cf34fba408614e1c7e",
+      "detachedSignatureVerified": true
+    }
   ],
+  "bundle": {
+    "file": "liquibase-starrocks-0.3.0-central.zip",
+    "sha256": "599e40c9ecefc40642fe44f3ae78fe8bde196f52cb25e4eb1f0bc004aa209bd8",
+    "filesVerified": 24
+  },
+  "signatureVerification": "Four detached PGP signatures verified independently against the maintainer key; MD5, SHA-1, SHA-256 and SHA-512 checked for all four artifacts.",
+  "cleanCheckout": {
+    "sourceCommit": "e543ad3d0e7554e6b5ccb8fdaa63379f4f0f71a8",
+    "unitTestsPassed": 24,
+    "maintainerFilesPresent": false,
+    "jarMatchesSignedCandidate": true
+  },
+  "developmentStress": {
+    "sourceCommit": "4a19ef37bc921d00796b413f806cf87babf9c69a",
+    "jarSha256": "91a06945bea975be27fce7f67fff0befbd6907cc7b82372717614b89135d8041",
+    "roundsPassed": 10,
+    "processesPerRound": 2,
+    "note": "Earlier development artifact. Final candidate repeats contention in every CI tuple and local signed-artifact suite."
+  },
   "records": [
-    {
-      "connectorVersion": "0.2.0",
-      "sourceCommit": "03e2abbb40208864d6323fac99abe26aa4ed4362",
-      "artifactKind": "source-build",
-      "liquibase": "4.23.0",
-      "starrocks": "3.1.7",
-      "java": 17,
-      "jdbcDriver": "com.mysql:mysql-connector-j:8.4.0",
-      "os": "linux",
-      "architecture": "amd64",
-      "topology": "allin1-single-node",
-      "image": "starrocks/allin1-ubuntu:3.1.7",
-      "imageDigest": null,
-      "scenarioSet": "migration-baseline-v1",
-      "result": "passed",
-      "unitTestsPassed": 11,
-      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34263979486"
-    },
-    {
-      "connectorVersion": "0.2.0",
-      "sourceCommit": "03e2abbb40208864d6323fac99abe26aa4ed4362",
-      "artifactKind": "source-build",
-      "liquibase": "4.29.1",
-      "starrocks": "4.1.1",
-      "java": 21,
-      "jdbcDriver": "com.mysql:mysql-connector-j:8.4.0",
-      "os": "linux",
-      "architecture": "amd64",
-      "topology": "allin1-single-node",
-      "image": "starrocks/allin1-ubuntu:4.1.1",
-      "imageDigest": null,
-      "scenarioSet": "migration-baseline-v1",
-      "result": "passed",
-      "unitTestsPassed": 11,
-      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34263979486"
-    },
-    {
-      "connectorVersion": "0.2.0",
-      "sourceCommit": "03e2abbb40208864d6323fac99abe26aa4ed4362",
-      "artifactKind": "source-build",
-      "liquibase": "5.0.3",
-      "starrocks": "4.1.1",
-      "java": 21,
-      "jdbcDriver": "com.mysql:mysql-connector-j:8.4.0",
-      "os": "linux",
-      "architecture": "amd64",
-      "topology": "allin1-single-node",
-      "image": "starrocks/allin1-ubuntu:4.1.1",
-      "imageDigest": null,
-      "scenarioSet": "migration-baseline-v1",
-      "result": "passed",
-      "unitTestsPassed": 11,
-      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34263979486"
-    },
-    {
-      "connectorVersion": "0.2.0",
-      "sourceCommit": "03e2abbb40208864d6323fac99abe26aa4ed4362",
-      "artifactKind": "signed-release",
-      "liquibase": "5.0.3",
-      "starrocks": "4.1.1",
-      "java": 21,
-      "jdbcDriver": "com.mysql:mysql-connector-j:8.4.0",
-      "os": "linux",
-      "architecture": "arm64",
-      "topology": "allin1-single-node",
-      "image": "starrocks/allin1-ubuntu:4.1.1",
-      "imageDigest": null,
-      "scenarioSet": "migration-baseline-v1",
-      "result": "passed",
-      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.2.0",
-      "verificationRecord": "https://github.com/infocusmodereal/liquibase-starrocks/releases/download/v0.2.0/release-verification.json"
-    },
     {
       "connectorVersion": "0.3.0-SNAPSHOT",
       "artifactKind": "source-build",
@@ -306,5 +251,19 @@
       "logAsset": "signed-integration-final.log",
       "logSha256": "9fab0f6becb8bef2885e298fced71bfcf8b1ec3b062deabecdd61dd60be97990"
     }
+  ],
+  "publication": {
+    "mavenCentral": "not uploaded or published",
+    "github": "draft only",
+    "publicDownloadVerification": "pending publication"
+  },
+  "limitations": [
+    "Only exact recorded combinations and named scenarios were exercised; unlisted patches are unverified.",
+    "migration-baseline-v1 does not cover rollback, snapshots, concurrent processes or multi-node failover.",
+    "migration-capabilities-v2 covers bounded inspection and two-process contention on single-node servers; it does not establish lossless diff replay, shared-data support or multi-node failover.",
+    "StarRocks 3.1.7 does not support the tested rename operation or hyphenated metadata names; those boundaries are asserted by the suite.",
+    "Historical image digests were not recorded; null does not mean a pinned image.",
+    "Source-built 0.3.0-SNAPSHOT CI JARs were compared byte for byte with the signed 0.3.0 candidate. Detached signatures and publication status are recorded separately.",
+    "Local evidence is distinguished from CI evidence; draft release assets become public only when published."
   ]
 }

@@ -19,8 +19,11 @@
   command-line credentials or automatic publication.
 - Add user, contributor, upgrade, support and release documentation.
 
-Compatibility candidates are still under validation. See `COMPATIBILITY.md`;
-this section does not announce a published release.
+Seven exact compatibility combinations passed with the candidate JAR, along
+with the official harness on amd64/arm64 and an independent signed-artifact
+integration run. See [COMPATIBILITY.md](COMPATIBILITY.md) and the
+[release verification record](compatibility/0.3.0-verification.json).
+The candidate is ready; this section does not announce publication.
 
 ## 0.2.0 (2026-09-08)
 
