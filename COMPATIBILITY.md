@@ -1,6 +1,6 @@
 # Compatibility and validation
 
-Local validation on 2026-09-08, for the proposed 0.1.3 changes. These results
+Validation on 2026-09-08 for the released 0.1.3 changes. These results
 do not apply retroactively to the published 0.1.2 artifact.
 
 | Liquibase runtime | StarRocks | Integration JDK | Unit tests | Integration |
@@ -25,14 +25,25 @@ diff/snapshot generation, every change type, multi-node failover and concurrent
 distributed migrations are outside this matrix. Lock ownership isolation was
 tested at the executor boundary, not under a multi-process stress workload.
 
-## Runtime versus compile dependency
+## Runtime versus compile dependency in 0.1.3
 
 The extension continues to compile against Liquibase 4.23.0. Tests and CLI
 integration successfully ran that compiled extension with 5.0.3, but directly
 changing the compile dependency to 5.0.3 fails because
 `hasDatabaseChangeLogLockTable` no longer overrides a superclass method.
-That source/API migration remains separate work. Do not interpret this matrix
-as approval to simply replace the compile dependency version.
+That source/API migration is addressed separately in the 0.2.0 development
+branch by removing the obsolete override and using core lock-table discovery.
+Do not interpret the 0.1.3 matrix as approval to simply replace its compile
+dependency version.
+
+## 0.2.0 development
+
+The compile API and default test runtime are now Liquibase 5.0.3. The test
+compile API remains 4.23.0 to retain tests that also exercise the oldest
+supported runtime; `-PtestLiquibaseVersion` selects the actual test runtime.
+The CI matrix builds the new source against 5.0.3 and exercises all three
+runtimes with real StarRocks. Consult the candidate PR checks for its results;
+the local matrix above describes the 0.1.3 code, not a 0.2.0 release.
 
 [Liquibase 5.0.3 release notes](https://github.com/liquibase/liquibase/releases/tag/v5.0.3)
 and its [build configuration](https://github.com/liquibase/liquibase/blob/v5.0.3/pom.xml)
@@ -62,7 +73,11 @@ Detailed local logs and before/after reports are under ignored
 `integration/.cache/review/`. CI uploads test reports and integration logs.
 No publishing credentials are required for these checks.
 
-Maven Central metadata was checked on 2026-09-08 and lists 0.1.2 as the latest
-published extension. The default development version is now 0.1.3-SNAPSHOT.
-Publishing a signed 0.1.3 and verifying the installed public artifact remain
-release steps; no new Maven release was published as part of these local tests.
+Version 0.1.3 was published to Maven Central on 2026-09-08. The public plugin
+JAR, sources JAR, Javadoc JAR and POM were downloaded and their SHA-256 hashes
+matched the signed release bundle. The exact signed plugin JAR also passed
+the migration, checksum and abandoned-lock recovery integration test before
+publication. See the [0.1.3 release](https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.1.3).
+
+The default development version on this branch is 0.2.0-SNAPSHOT. It contains
+the separate Liquibase 5.0.3 compile-API migration and has not been released.

@@ -23,7 +23,6 @@ import liquibase.executor.Executor
 import liquibase.executor.ExecutorService
 import liquibase.ext.starrocks.database.StarRocksDatabase
 import liquibase.lockservice.StandardLockService
-import liquibase.logging.Logger
 import liquibase.statement.core.RawSqlStatement
 
 /**
@@ -73,30 +72,10 @@ class StarRocksLockService : StandardLockService() {
         return isLockTableInitialized
     }
 
-    override fun hasDatabaseChangeLogLockTable(): Boolean {
-        var hasTable = false
-        try {
-            val query = String.format(
-                "SELECT ID FROM `%s`.%s LIMIT 1",
-                database.defaultSchemaName, database.databaseChangeLogLockTableName
-            )
-            getExecutor().execute(RawSqlStatement(query))
-            hasTable = true
-        } catch (e: DatabaseException) {
-            getLogger().info(
-                String.format("No %s table available", database.databaseChangeLogLockTableName)
-            )
-        }
-        return hasTable
-    }
-
     private fun getExecutor(): Executor {
         return Scope.getCurrentScope()
             .getSingleton(ExecutorService::class.java)
             .getExecutor("jdbc", database)
     }
 
-    private fun getLogger(): Logger {
-        return Scope.getCurrentScope().getLog(StarRocksLockService::class.java)
-    }
 }
