@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: modify-type-must-fail
+      author: regression
+      changes:
+        - modifyDataType:
+            tableName: plugin_integration
+            columnName: name
+            newDataType: VARCHAR(512)

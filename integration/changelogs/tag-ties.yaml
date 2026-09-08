@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: first
+      author: integration
+      changes:
+        - sql: {sql: SELECT 1}
+  - changeSet:
+      id: second
+      author: integration
+      changes:
+        - sql: {sql: SELECT 2}

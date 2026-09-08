@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: concurrent-once
+      author: integration
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE race_events (id INT, marker VARCHAR(32)) ENGINE=OLAP DUPLICATE KEY(id) DISTRIBUTED BY HASH(id) BUCKETS 1 PROPERTIES ('replication_num'='1');
+              INSERT INTO race_events VALUES (1, 'applied');
+              SELECT SLEEP(5);

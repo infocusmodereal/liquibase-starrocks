@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: repeatable.xml
+      relativeToChangelogFile: true
