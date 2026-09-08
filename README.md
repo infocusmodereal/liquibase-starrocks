@@ -30,6 +30,12 @@ liquibase-starrocks/
 
 ## Development
 
+See [DEVELOPMENT.md](DEVELOPMENT.md) for local setup, IDE configuration,
+snapshot builds, and the integration workflow. For a local build, run
+`./scripts/dev` (automatically locates Homebrew JDK 17 on macOS).
+See [COMPATIBILITY.md](COMPATIBILITY.md) for the tested runtime matrix and
+the distinction between runtime compatibility and upgrading the compile API.
+
 ### Building the Project
 
 ```bash
@@ -72,14 +78,14 @@ To test this extension with Liquibase CLI, follow these steps:
 
 2. **Build the extension with Shadow JAR**:
    ```bash
-   ./gradlew clean shadowJar
+   ./scripts/dev prepareIntegrationJar
    ```
 
    > **Note**: It's important to use the `shadowJar` task to create a fat JAR that includes all necessary dependencies, including the Kotlin runtime. This is required for the extension to work properly with Liquibase.
 
 3. **Copy the extension JAR to Liquibase's lib directory**:
    ```bash
-   cp build/libs/liquibase-starrocks-0.1.1.jar liquibase/lib/
+   cp build/integration/liquibase-starrocks.jar liquibase/lib/
    ```
 
 4. **Copy the MySQL connector to Liquibase's lib directory**:

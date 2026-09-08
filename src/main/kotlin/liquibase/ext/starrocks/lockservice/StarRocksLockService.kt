@@ -17,6 +17,7 @@ import liquibase.Scope
 import liquibase.database.Database
 import liquibase.exception.DatabaseException
 import liquibase.exception.LiquibaseException
+import liquibase.exception.LockException
 import liquibase.exception.UnexpectedLiquibaseException
 import liquibase.executor.Executor
 import liquibase.executor.ExecutorService
@@ -35,6 +36,22 @@ class StarRocksLockService : StandardLockService() {
     override fun getPriority(): Int = PRIORITY_DATABASE
 
     override fun supports(database: Database): Boolean = database is StarRocksDatabase
+
+    // An up-to-date update may release without ever acquiring a lock.
+    @Throws(LockException::class)
+    override fun releaseLock() {
+        if (!hasChangeLogLock()) {
+            return
+        }
+        super.releaseLock()
+    }
+
+    // The explicit recovery command must bypass the normal ownership guard.
+    @Throws(LockException::class, DatabaseException::class)
+    override fun forceReleaseLock() {
+        init()
+        super.releaseLock()
+    }
 
     override fun isDatabaseChangeLogLockTableInitialized(tableJustCreated: Boolean): Boolean {
         if (!isLockTableInitialized) {

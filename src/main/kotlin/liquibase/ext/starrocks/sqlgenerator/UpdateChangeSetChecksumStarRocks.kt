@@ -13,6 +13,7 @@
  */
 package liquibase.ext.starrocks.sqlgenerator
 
+import liquibase.ChecksumVersion
 import liquibase.changelog.ChangeSet
 import liquibase.database.Database
 import liquibase.ext.starrocks.database.StarRocksDatabase
@@ -42,18 +43,20 @@ class UpdateChangeSetChecksumStarRocks : UpdateChangeSetChecksumGenerator() {
         val schemaName = database.defaultSchemaName
         val changeSet: ChangeSet = statement.changeSet
 
-        // Get the new checksum from the statement
-        // Note: In the current version of Liquibase, we need to access the checksum differently
-        // This is a workaround until we find the correct way to access the new checksum
-        val newChecksum = "8:new_checksum" // This is a placeholder, will be replaced at runtime
+        val newChecksum = changeSet.generateCheckSum(ChecksumVersion.latest()).toString()
+        val id = database.escapeStringForDatabase(changeSet.id)
+        val author = database.escapeStringForDatabase(changeSet.author)
+        val filePath = database.escapeStringForDatabase(
+            changeSet.storedFilePath?.takeIf { it.isNotBlank() } ?: changeSet.filePath
+        )
 
         // Use standard UPDATE syntax for StarRocks
         val updateQuery = """
             UPDATE `$schemaName`.$tableName 
             SET MD5SUM = '$newChecksum' 
-            WHERE ID = '${changeSet.id}' 
-            AND AUTHOR = '${changeSet.author}' 
-            AND FILENAME = '${changeSet.filePath}'
+            WHERE ID = '$id'
+            AND AUTHOR = '$author'
+            AND FILENAME = '$filePath'
         """.trimIndent()
 
         return arrayOf(UnparsedSql(updateQuery))

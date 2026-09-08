@@ -22,7 +22,7 @@ plugins {
 }
 
 group = "io.github.infocusmodereal"
-val baseVersion = project.findProperty("baseVersion") as String? ?: "0.1.1"
+val baseVersion = project.findProperty("baseVersion") as String? ?: "0.1.3"
 val isRelease = (project.findProperty("isRelease") as String? ?: "false").toBoolean()
 version = if (isRelease) baseVersion else "$baseVersion-SNAPSHOT"
 
@@ -45,6 +45,9 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testImplementation("org.testcontainers:junit-jupiter:1.19.0")
     testImplementation("org.liquibase:liquibase-core:4.23.0")
+    // Mock the executor boundary while exercising the real lock service lifecycle.
+    testImplementation("org.mockito:mockito-core:5.5.0")
+    testRuntimeOnly("org.liquibase:liquibase-core:${findProperty("testLiquibaseVersion") ?: "4.23.0"}")
 
     // Other dependencies
     implementation("org.yaml:snakeyaml:2.0")
@@ -58,12 +61,17 @@ java {
     withSourcesJar()
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.jvmTarget = "17"
+}
+
 tasks.test {
     useJUnitPlatform()
 }
 
 // Configure the Shadow plugin to create a fat JAR with all dependencies
 tasks.shadowJar {
+    mustRunAfter(tasks.jar)
     mergeServiceFiles()
     archiveClassifier.set("") // Replace the standard JAR with the fat JAR
     dependencies {
@@ -71,6 +79,14 @@ tasks.shadowJar {
         include(dependency("org.jetbrains.kotlin:kotlin-stdlib-jdk8"))
         include(dependency("org.jetbrains.kotlin:kotlin-stdlib-common"))
     }
+}
+
+// Give the integration harness exactly the archive produced by this build.
+tasks.register<Sync>("prepareIntegrationJar") {
+    dependsOn(tasks.jar, tasks.shadowJar)
+    from(tasks.shadowJar.flatMap { it.archiveFile })
+    into(layout.buildDirectory.dir("integration"))
+    rename { "liquibase-starrocks.jar" }
 }
 
 publishing {
