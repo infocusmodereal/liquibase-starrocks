@@ -25,14 +25,25 @@ diff/snapshot generation, every change type, multi-node failover and concurrent
 distributed migrations are outside this matrix. Lock ownership isolation was
 tested at the executor boundary, not under a multi-process stress workload.
 
-## Runtime versus compile dependency
+## Runtime versus compile dependency in 0.1.3
 
 The extension continues to compile against Liquibase 4.23.0. Tests and CLI
 integration successfully ran that compiled extension with 5.0.3, but directly
 changing the compile dependency to 5.0.3 fails because
 `hasDatabaseChangeLogLockTable` no longer overrides a superclass method.
-That source/API migration remains separate work. Do not interpret this matrix
-as approval to simply replace the compile dependency version.
+That source/API migration is addressed separately in the 0.2.0 development
+branch by removing the obsolete override and using core lock-table discovery.
+Do not interpret the 0.1.3 matrix as approval to simply replace its compile
+dependency version.
+
+## 0.2.0 development
+
+The compile API and default test runtime are now Liquibase 5.0.3. The test
+compile API remains 4.23.0 to retain tests that also exercise the oldest
+supported runtime; `-PtestLiquibaseVersion` selects the actual test runtime.
+The CI matrix builds the new source against 5.0.3 and exercises all three
+runtimes with real StarRocks. Consult the candidate PR checks for its results;
+the local matrix above describes the 0.1.3 code, not a 0.2.0 release.
 
 [Liquibase 5.0.3 release notes](https://github.com/liquibase/liquibase/releases/tag/v5.0.3)
 and its [build configuration](https://github.com/liquibase/liquibase/blob/v5.0.3/pom.xml)

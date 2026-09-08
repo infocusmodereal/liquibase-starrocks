@@ -22,7 +22,7 @@ plugins {
 }
 
 group = "io.github.infocusmodereal"
-val baseVersion = project.findProperty("baseVersion") as String? ?: "0.1.3"
+val baseVersion = project.findProperty("baseVersion") as String? ?: "0.2.0"
 val isRelease = (project.findProperty("isRelease") as String? ?: "false").toBoolean()
 version = if (isRelease) baseVersion else "$baseVersion-SNAPSHOT"
 
@@ -39,7 +39,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     // Liquibase core (provided scope in Maven, compileOnly in Gradle)
-    compileOnly("org.liquibase:liquibase-core:4.23.0")
+    compileOnly("org.liquibase:liquibase-core:5.0.3")
 
     // Test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
@@ -47,7 +47,7 @@ dependencies {
     testImplementation("org.liquibase:liquibase-core:4.23.0")
     // Mock the executor boundary while exercising the real lock service lifecycle.
     testImplementation("org.mockito:mockito-core:5.5.0")
-    testRuntimeOnly("org.liquibase:liquibase-core:${findProperty("testLiquibaseVersion") ?: "4.23.0"}")
+    testRuntimeOnly("org.liquibase:liquibase-core:${findProperty("testLiquibaseVersion") ?: "5.0.3"}")
 
     // Other dependencies
     implementation("org.yaml:snakeyaml:2.0")

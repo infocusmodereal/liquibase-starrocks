@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.1.3 (unreleased)
+## 0.2.0 (unreleased)
+
+- Compile against Liquibase 5.0.3 and use its inherited lock-table discovery
+  instead of overriding the method removed from the newer API.
+- Retain runtime regression coverage for 4.23.0, 4.29.1 and 5.0.3.
+
+## 0.1.3
 
 - Skip normal lock release when this service did not acquire the lock, while
   preserving explicit abandoned-lock recovery through `release-locks`.
