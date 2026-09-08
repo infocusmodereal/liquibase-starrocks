@@ -208,3 +208,7 @@ tasks.register<Test>("harnessTest") {
     systemProperty("changeObjects", "createStarRocksTable")
     systemProperty("revalidateSql", "true")
 }
+
+// The Maven publication distributes the shaded JAR, not the Java component's thin variant.
+// Publish its explicit POM/artifact contract instead of inconsistent Gradle variants.
+tasks.withType<GenerateModuleMetadata>().configureEach { enabled = false }

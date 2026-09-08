@@ -60,8 +60,13 @@ for process in 1 2; do
   (run_liquibase "concurrent-$process" --url="jdbc:mysql://$starrocks_host:$starrocks_port/race_test" --changelog-file=integration/changelogs/concurrent.yaml update) > "$cache_dir/concurrent-$process.out" 2>&1 &
   if [[ "$process" == 1 ]]; then pid1=$!; else pid2=$!; fi
 done
-wait "$pid1"
-wait "$pid2"
+concurrent_status=0
+wait "$pid1" || concurrent_status=1
+wait "$pid2" || concurrent_status=1
+if [[ "$concurrent_status" != 0 ]]; then
+  cat "$cache_dir/concurrent-1.out" "$cache_dir/concurrent-2.out" >&2
+  exit 1
+fi
 [[ "$(sql -D race_test -N -e 'SELECT COUNT(*) FROM race_events;')" == 1 ]]
 [[ "$(sql -D race_test -N -e 'SELECT COUNT(*) FROM DATABASECHANGELOG;')" == 1 ]]
 [[ "$(sql -D race_test -N -e 'SELECT COUNT(*) FROM DATABASECHANGELOGLOCK WHERE ID=1 AND LOCKED=0;')" == 1 ]]
