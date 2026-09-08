@@ -1,6 +1,6 @@
 # 0.3 proposal: predictable migrations and verifiable compatibility
 
-Status: proposed scope, 2026-09-08. Branch: `feat/0.3`.
+Status: implementation and release validation in progress, 2026-09-08. Branch: `feat/0.3`.
 Baseline: released 0.2.0; reviewed main commit `bf47335`.
 Development version: `0.3.0-SNAPSHOT`. This document does not claim that the
 proposed functionality or version combinations have been implemented or tested.
@@ -187,3 +187,29 @@ shows they fit without delaying the correctness work above.
 Recommended first implementation PR: **fix silent modifyDataType success and
 add a database-backed regression**. Follow with metadata identity/quoting,
 the harness/capability contract, operational tests, version expansion and docs.
+
+
+## Implementation record
+
+The implementation is tracked in [PR #9](https://github.com/infocusmodereal/liquibase-starrocks/pull/9).
+The original proposal above is retained for traceability; the current contract
+is in [capabilities.md](capabilities.md).
+
+- Reproduced the published 0.2.0 silent type change; validation now rejects it.
+- Added native PRIMARY/DUPLICATE tables, core ADD COLUMN adaptation, catalog
+  settings, real server versions, scalar validation and PRIMARY-key snapshots.
+- Tested rollback identity/quoting, tag ties, repeated changes, preview, failed
+  migrations and lock recovery. Added the official harness on an isolated runtime.
+- Repeated contention tests exposed dual ownership with row-only locking.
+  Catalog reservations passed ten local rounds with two processes per round.
+  This adds documented CREATE VIEW/DROP VIEW privileges and forbids mixed
+  0.2/0.3 concurrent writers. New CI runs revalidate the full version matrix.
+- Added candidate-driven CI, artifact provenance, signed bundle preparation,
+  independent signature verification, and user/contributor/upgrade documentation.
+
+Release validation remains in progress until the final CI matrix and exact
+signed-artifact checks are recorded. Broader diff reconstruction, additional key
+models, shared-data deployment and multi-node failover remain follow-up scope.
+Replication values above one are configurable, but the single-node matrix does
+not establish multi-node availability behavior. Native async alterations require
+explicit SQL/completion handling as described in the capability contract.

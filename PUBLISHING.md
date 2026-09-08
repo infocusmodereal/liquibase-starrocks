@@ -24,6 +24,16 @@ From the reviewed release commit, run:
 ```
 
 The task fails if any of the four publication artifacts or signatures is missing.
+Verify every signature and checksum (a public keyring also works):
+
+```bash
+python3 scripts/verify-release.py --key secret-key.asc --directory build/central/io/github/infocusmodereal/liquibase-starrocks/0.3.0
+```
+
+The verifier reads only public key packets and uses the PGP libraries from the
+pinned Gradle distribution. Run it with Java 17 or newer. It never decrypts or
+prints the signing key.
+
 Inspect `build/distributions/liquibase-starrocks-0.3.0-central.zip`. It contains
 JAR, sources, Javadoc and POM, their signatures, and MD5/SHA-1/SHA-256/SHA-512
 checksums. Only the Kotlin runtime is bundled; the host supplies Liquibase and

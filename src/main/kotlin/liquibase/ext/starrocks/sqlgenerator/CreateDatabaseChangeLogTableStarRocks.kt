@@ -51,25 +51,23 @@ class CreateDatabaseChangeLogTableStarRocks : CreateDatabaseChangeLogTableGenera
 
         // StarRocks syntax for creating a table with a composite primary key
         // See: https://docs.starrocks.io/docs/sql-reference/sql-statements/table_bucket_part_index/CREATE_TABLE/
-        val createTableQuery = """
-            CREATE TABLE IF NOT EXISTS ${tableName} (
-                ID VARCHAR(255) NOT NULL,
-                AUTHOR VARCHAR(255) NOT NULL,
-                FILENAME VARCHAR(255) NOT NULL,
-                DATEEXECUTED DATETIME,
-                ORDEREXECUTED BIGINT,
-                EXECTYPE VARCHAR(10),
-                MD5SUM VARCHAR(35),
-                DESCRIPTION VARCHAR(255),
-                COMMENTS VARCHAR(255),
-                TAG VARCHAR(255),
-                LIQUIBASE VARCHAR(20),
-                CONTEXTS VARCHAR(255),
-                LABELS VARCHAR(255),
-                DEPLOYMENT_ID VARCHAR(10)
-            )
-            ${tableParams.generateSql()}
-        """.trimIndent()
+        val columns = listOf(
+            "ID VARCHAR(255) NOT NULL",
+            "AUTHOR VARCHAR(255) NOT NULL",
+            "FILENAME VARCHAR(255) NOT NULL",
+            "DATEEXECUTED DATETIME",
+            "ORDEREXECUTED BIGINT",
+            "EXECTYPE VARCHAR(10)",
+            "MD5SUM VARCHAR(35)",
+            "DESCRIPTION VARCHAR(255)",
+            "COMMENTS VARCHAR(255)",
+            "TAG VARCHAR(255)",
+            "LIQUIBASE VARCHAR(20)",
+            "CONTEXTS VARCHAR(255)",
+            "LABELS VARCHAR(255)",
+            "DEPLOYMENT_ID VARCHAR(10)"
+        ).joinToString(", ")
+        val createTableQuery = "CREATE TABLE IF NOT EXISTS $tableName ($columns) ${tableParams.generateSql()}"
 
         return arrayOf(UnparsedSql(createTableQuery))
     }

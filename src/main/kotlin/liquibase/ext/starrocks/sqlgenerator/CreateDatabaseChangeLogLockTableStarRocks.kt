@@ -51,15 +51,13 @@ class CreateDatabaseChangeLogLockTableStarRocks : CreateDatabaseChangeLogLockTab
 
         // StarRocks syntax for creating a table with a primary key
         // See: https://docs.starrocks.io/docs/sql-reference/sql-statements/table_bucket_part_index/CREATE_TABLE/
-        val createTableQuery = """
-            CREATE TABLE IF NOT EXISTS ${tableName} (
-                ID INT NOT NULL,
-                LOCKED TINYINT NOT NULL,
-                LOCKGRANTED DATETIME,
-                LOCKEDBY VARCHAR(255)
-            )
-            ${tableParams.generateSql()}
-        """.trimIndent()
+        val columns = listOf(
+            "ID INT NOT NULL",
+            "LOCKED TINYINT NOT NULL",
+            "LOCKGRANTED DATETIME",
+            "LOCKEDBY VARCHAR(255)"
+        ).joinToString(", ")
+        val createTableQuery = "CREATE TABLE IF NOT EXISTS $tableName ($columns) ${tableParams.generateSql()}"
 
         return arrayOf(UnparsedSql(createTableQuery))
     }
