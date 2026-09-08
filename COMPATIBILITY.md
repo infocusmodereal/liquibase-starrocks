@@ -87,5 +87,23 @@ Its four public artifacts were downloaded and matched the SHA-256 hashes of
 the signed bundle. See the [0.2.0 release](https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.2.0)
 and its attached verification record for the source commit and artifact hashes.
 
-Local development builds default to 0.2.0-SNAPSHOT. Published 0.2.0 is the
-separate signed release, built with `-PbaseVersion=0.2.0 -PisRelease=true`.
+Local development builds on the 0.3 branch default to 0.3.0-SNAPSHOT.
+Published 0.2.0 is the separate signed release, built with
+`-PbaseVersion=0.2.0 -PisRelease=true`.
+
+## Versioned compatibility registry
+
+[compatibility/releases.json](compatibility/releases.json) records the exact
+0.2.0 combinations above, including whether evidence applies to source-built
+code or the signed release artifact. Earlier 0.1.x evidence remains in this
+document; the initial JSON registry does not reconstruct missing provenance.
+
+A passing row covers only its named scenarios, runtime, driver, JDK,
+architecture and deployment topology. It does not imply support for every
+patch in a version family. A source-built CI pass is not an artifact test.
+Missing image digests and local reports are identified explicitly.
+
+The [0.3 proposal](docs/roadmap-0.3.md) defines candidate versions, capability
+coverage, evidence requirements and the proposed support policy. All new
+combinations remain untested until actual results are recorded. No 0.3 release
+has been published or certified by this planning change.

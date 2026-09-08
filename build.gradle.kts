@@ -22,7 +22,7 @@ plugins {
 }
 
 group = "io.github.infocusmodereal"
-val baseVersion = project.findProperty("baseVersion") as String? ?: "0.2.0"
+val baseVersion = project.findProperty("baseVersion") as String? ?: "0.3.0"
 val isRelease = (project.findProperty("isRelease") as String? ?: "false").toBoolean()
 version = if (isRelease) baseVersion else "$baseVersion-SNAPSHOT"
 

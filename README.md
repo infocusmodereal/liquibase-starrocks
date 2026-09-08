@@ -28,6 +28,13 @@ liquibase-starrocks/
 │       └── resources/         # Test resources
 ```
 
+## 0.3 development
+
+The next release is being planned on `feat/0.3`. See the
+[0.3 roadmap](docs/roadmap-0.3.md) for findings, priorities and acceptance criteria,
+and the [compatibility registry](compatibility/releases.json) for exact 0.2.0
+validation records. Proposed 0.3 combinations are not yet verified.
+
 ## Development
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for local setup, IDE configuration,

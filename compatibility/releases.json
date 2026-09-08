@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-08",
+  "scope": "Initial 0.2.0 registry. Earlier 0.1.x evidence remains in COMPATIBILITY.md.",
+  "scenarios": {
+    "migration-baseline-v1": [
+      "fresh SQL migration",
+      "two no-op updates",
+      "single changelog row",
+      "clear checksums, recalculate and validate",
+      "abandoned lock recovery from a new CLI process",
+      "update after recovery"
+    ]
+  },
+  "limitations": [
+    "Only the exact recorded combinations and named scenarios were exercised.",
+    "No coverage claim for automatic rollback, diff, snapshots, concurrent migrations or multi-node failover.",
+    "Historical image digests were not recorded; null does not mean a pinned image.",
+    "Historical local reports are ignored files; the public release verification record provides provenance."
+  ],
+  "records": [
+    {
+      "connectorVersion": "0.2.0",
+      "sourceCommit": "03e2abbb40208864d6323fac99abe26aa4ed4362",
+      "artifactKind": "source-build",
+      "liquibase": "4.23.0",
+      "starrocks": "3.1.7",
+      "java": 17,
+      "jdbcDriver": "com.mysql:mysql-connector-j:8.4.0",
+      "os": "linux",
+      "architecture": "amd64",
+      "topology": "allin1-single-node",
+      "image": "starrocks/allin1-ubuntu:3.1.7",
+      "imageDigest": null,
+      "scenarioSet": "migration-baseline-v1",
+      "result": "passed",
+      "unitTestsPassed": 11,
+      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34263979486"
+    },
+    {
+      "connectorVersion": "0.2.0",
+      "sourceCommit": "03e2abbb40208864d6323fac99abe26aa4ed4362",
+      "artifactKind": "source-build",
+      "liquibase": "4.29.1",
+      "starrocks": "4.1.1",
+      "java": 21,
+      "jdbcDriver": "com.mysql:mysql-connector-j:8.4.0",
+      "os": "linux",
+      "architecture": "amd64",
+      "topology": "allin1-single-node",
+      "image": "starrocks/allin1-ubuntu:4.1.1",
+      "imageDigest": null,
+      "scenarioSet": "migration-baseline-v1",
+      "result": "passed",
+      "unitTestsPassed": 11,
+      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34263979486"
+    },
+    {
+      "connectorVersion": "0.2.0",
+      "sourceCommit": "03e2abbb40208864d6323fac99abe26aa4ed4362",
+      "artifactKind": "source-build",
+      "liquibase": "5.0.3",
+      "starrocks": "4.1.1",
+      "java": 21,
+      "jdbcDriver": "com.mysql:mysql-connector-j:8.4.0",
+      "os": "linux",
+      "architecture": "amd64",
+      "topology": "allin1-single-node",
+      "image": "starrocks/allin1-ubuntu:4.1.1",
+      "imageDigest": null,
+      "scenarioSet": "migration-baseline-v1",
+      "result": "passed",
+      "unitTestsPassed": 11,
+      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34263979486"
+    },
+    {
+      "connectorVersion": "0.2.0",
+      "sourceCommit": "03e2abbb40208864d6323fac99abe26aa4ed4362",
+      "artifactKind": "signed-release",
+      "liquibase": "5.0.3",
+      "starrocks": "4.1.1",
+      "java": 21,
+      "jdbcDriver": "com.mysql:mysql-connector-j:8.4.0",
+      "os": "linux",
+      "architecture": "arm64",
+      "topology": "allin1-single-node",
+      "image": "starrocks/allin1-ubuntu:4.1.1",
+      "imageDigest": null,
+      "scenarioSet": "migration-baseline-v1",
+      "result": "passed",
+      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.2.0",
+      "verificationRecord": "https://github.com/infocusmodereal/liquibase-starrocks/releases/download/v0.2.0/release-verification.json"
+    }
+  ]
+}
