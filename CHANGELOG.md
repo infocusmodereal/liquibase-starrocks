@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0 (2026-09-08)
 
 - Compile against Liquibase 5.0.3 and use its inherited lock-table discovery
   instead of overriding the method removed from the newer API.

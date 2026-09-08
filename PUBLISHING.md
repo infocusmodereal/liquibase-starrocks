@@ -26,7 +26,7 @@ export CENTRAL_TOKEN="$(printf "%s:%s" "$CENTRAL_USER" "$CENTRAL_PASS" | base64 
 Local JDK 17 + gpg:
 ```
 ./gradlew clean shadowJar sourcesJar javadocJar generatePomFileForMavenPublication createCentralBundle \
-  -PbaseVersion=0.1.2 -PisRelease=true
+  -PbaseVersion=0.2.0 -PisRelease=true
 ```
 
 If you do not have a local JDK/gpg, use Docker:
@@ -37,7 +37,7 @@ docker run --rm -v "$PWD:/workspace" -w /workspace eclipse-temurin:17-jdk-jammy 
     && signing_pass=$(grep "^signing.password=" gradle.properties | cut -d= -f2-) \
     && gpg --batch --yes --pinentry-mode loopback --passphrase "$signing_pass" --import secret-key.asc \
     && ./gradlew clean shadowJar sourcesJar javadocJar generatePomFileForMavenPublication createCentralBundle \
-      -PbaseVersion=0.1.2 -PisRelease=true'
+      -PbaseVersion=0.2.0 -PisRelease=true'
 ```
 
 Bundle output:
@@ -51,7 +51,7 @@ TOKEN="${CENTRAL_TOKEN:-$(grep '^centralToken=' gradle.properties | cut -d= -f2-
 curl --request POST \
   --header "Authorization: Bearer ${TOKEN}" \
   --form bundle=@build/distributions/central-bundle.zip \
-  "https://central.sonatype.com/api/v1/publisher/upload?name=liquibase-starrocks-0.1.2&publishingType=AUTOMATIC"
+  "https://central.sonatype.com/api/v1/publisher/upload?name=liquibase-starrocks-0.2.0&publishingType=AUTOMATIC"
 ```
 
 This returns a deployment ID.
@@ -66,7 +66,7 @@ curl --request POST \
 If you set `publishingType=USER_MANAGED`, finalize the publish in the portal UI.
 
 ## 5) Verify in Maven Central
-- `https://repo1.maven.org/maven2/io/github/infocusmodereal/liquibase-starrocks/0.1.2/`
+- `https://repo1.maven.org/maven2/io/github/infocusmodereal/liquibase-starrocks/0.2.0/`
 
 Indexing delay is normal. Maven Central may show the artifacts quickly, but
 third-party indexes (e.g. mvnrepository.com) can lag by hours or days.

@@ -27,23 +27,26 @@ tested at the executor boundary, not under a multi-process stress workload.
 
 ## Runtime versus compile dependency in 0.1.3
 
-The extension continues to compile against Liquibase 4.23.0. Tests and CLI
+Version 0.1.3 compiles against Liquibase 4.23.0. Tests and CLI
 integration successfully ran that compiled extension with 5.0.3, but directly
 changing the compile dependency to 5.0.3 fails because
 `hasDatabaseChangeLogLockTable` no longer overrides a superclass method.
-That source/API migration is addressed separately in the 0.2.0 development
-branch by removing the obsolete override and using core lock-table discovery.
+Version 0.2.0 addresses that source/API migration by removing the obsolete
+override and using core lock-table discovery.
 Do not interpret the 0.1.3 matrix as approval to simply replace its compile
 dependency version.
 
-## 0.2.0 development
+## 0.2.0 release
 
 The compile API and default test runtime are now Liquibase 5.0.3. The test
 compile API remains 4.23.0 to retain tests that also exercise the oldest
 supported runtime; `-PtestLiquibaseVersion` selects the actual test runtime.
 The CI matrix builds the new source against 5.0.3 and exercises all three
-runtimes with real StarRocks. Consult the candidate PR checks for its results;
-the local matrix above describes the 0.1.3 code, not a 0.2.0 release.
+runtimes with real StarRocks. All three combinations passed on the merged
+0.2.0 source in [GitHub Actions](https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34263979486).
+The exact signed release JAR additionally passed local integration with
+Liquibase 5.0.3, StarRocks 4.1.1 and JDK 21. The local matrix above records
+the initial 0.1.3 validation; the same matrix was repeated in CI for 0.2.0.
 
 [Liquibase 5.0.3 release notes](https://github.com/liquibase/liquibase/releases/tag/v5.0.3)
 and its [build configuration](https://github.com/liquibase/liquibase/blob/v5.0.3/pom.xml)
@@ -79,5 +82,10 @@ matched the signed release bundle. The exact signed plugin JAR also passed
 the migration, checksum and abandoned-lock recovery integration test before
 publication. See the [0.1.3 release](https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.1.3).
 
-The default development version on this branch is 0.2.0-SNAPSHOT. It contains
-the separate Liquibase 5.0.3 compile-API migration and has not been released.
+Version 0.2.0 was also published to Maven Central and GitHub on 2026-09-08.
+Its four public artifacts were downloaded and matched the SHA-256 hashes of
+the signed bundle. See the [0.2.0 release](https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.2.0)
+and its attached verification record for the source commit and artifact hashes.
+
+Local development builds default to 0.2.0-SNAPSHOT. Published 0.2.0 is the
+separate signed release, built with `-PbaseVersion=0.2.0 -PisRelease=true`.
