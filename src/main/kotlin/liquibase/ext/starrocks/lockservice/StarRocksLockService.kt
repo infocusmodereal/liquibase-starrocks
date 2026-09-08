@@ -50,7 +50,13 @@ open class StarRocksLockService : StandardLockService() {
         } catch (e: DatabaseException) {
             var cause: Throwable? = e
             while (cause != null) {
-                if (cause is java.sql.SQLException && cause.errorCode == 1050) return false
+                if (cause is java.sql.SQLException) {
+                    if (cause.errorCode == 1050) return false
+                    // StarRocks 3.1 uses generic 1064 for this specific catalog collision.
+                    // Do not swallow unrelated syntax or authorization failures.
+                    val duplicate = "Table '${database.databaseChangeLogLockTableName}_MUTEX' already exists"
+                    if (cause.errorCode == 1064 && cause.message?.endsWith(duplicate) == true) return false
+                }
                 cause = cause.cause
             }
             throw e

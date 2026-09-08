@@ -25,8 +25,8 @@ Lock acquisition first creates a reserved catalog view named
 `<databaseChangeLogLockTableName>_MUTEX`, then uses the usual Liquibase lock row.
 This is necessary because a conditional StarRocks UPDATE is not sufficient for
 mutual exclusion: repeated two-process testing reproduced dual ownership.
-Creating the same view without `IF NOT EXISTS` admits one creator; only SQL
-error 1050 is treated as contention. Other errors remain failures.
+Creating the same view without `IF NOT EXISTS` admits one creator; SQL error 1050 is treated as contention, as is the exact duplicate-view
+message returned with code 1064 by StarRocks 3.1. Other errors remain failures.
 
 Initialization uses the same reservation, and ordinary release drops it only
 after releasing the row. A crash or release failure retains the reservation;

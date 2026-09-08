@@ -147,4 +147,15 @@ class StarRocksLockServiceTest {
         verify(executor, never()).update(any(LockDatabaseChangeLogStatement::class.java))
     }
 
+    @Test
+    fun `legacy duplicate-view error is contention but unrelated syntax errors fail`() {
+        `when`(executor.updatesDatabase()).thenReturn(true)
+        doThrow(DatabaseException(java.sql.SQLSyntaxErrorException("Unexpected exception: Table 'DATABASECHANGELOGLOCK_MUTEX' already exists", "HY000", 1064)))
+            .`when`(executor).execute(any(liquibase.statement.core.RawSqlStatement::class.java))
+        assertFalse(service.acquireLock())
+        doThrow(DatabaseException(java.sql.SQLSyntaxErrorException("Getting syntax error", "HY000", 1064)))
+            .`when`(executor).execute(any(liquibase.statement.core.RawSqlStatement::class.java))
+        assertThrows(LockException::class.java) { service.acquireLock() }
+    }
+
 }
