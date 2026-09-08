@@ -43,7 +43,7 @@ class StarRocksDatabaseTest {
         for ((type, sql) in mapOf("varchar" to "VARCHAR(255)", "decimal" to "DECIMAL(10, 0)", "decimal(12)" to "DECIMAL(12, 0)")) {
             assertEquals(sql, factory.fromDescription(type, db).toDatabaseDataType(db).toString())
         }
-        for (type in listOf("varchar(0)", "varchar(1048577)", "decimal(39,0)", "decimal(4,5)")) {
+        for (type in listOf("varchar(0)", "varchar(1048577)", "decimal(39,0)", "decimal(4,5)", "decimal(12,2,7)", "varchar(32,7)")) {
             assertThrows(IllegalArgumentException::class.java) { factory.fromDescription(type, db).toDatabaseDataType(db) }
         }
     }

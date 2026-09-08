@@ -30,6 +30,7 @@ class StarRocksVarcharType : VarcharType() {
 
     override fun toDatabaseDataType(database: Database): DatabaseDataType {
         if (database is StarRocksDatabase) {
+            require(parameters.size <= 1) { "StarRocks VARCHAR accepts at most one length parameter" }
             val size = parameters.getOrNull(0)?.toString()?.toIntOrNull() ?: if (parameters.isEmpty()) 255
                 else throw IllegalArgumentException("StarRocks VARCHAR requires an integer length")
             require(size in 1..1048576) { "StarRocks VARCHAR length must be between 1 and 1048576" }

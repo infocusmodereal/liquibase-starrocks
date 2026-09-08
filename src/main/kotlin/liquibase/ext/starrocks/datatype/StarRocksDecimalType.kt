@@ -30,6 +30,7 @@ class StarRocksDecimalType : DecimalType() {
 
     override fun toDatabaseDataType(database: Database): DatabaseDataType {
         if (database is StarRocksDatabase) {
+            require(parameters.size <= 2) { "StarRocks DECIMAL accepts at most precision and scale" }
             val precision = parameters.getOrNull(0)?.toString()?.toIntOrNull() ?: if (parameters.isEmpty()) 10
                 else throw IllegalArgumentException("StarRocks DECIMAL requires integer precision")
             val scale = parameters.getOrNull(1)?.toString()?.toIntOrNull() ?: if (parameters.size < 2) 0
