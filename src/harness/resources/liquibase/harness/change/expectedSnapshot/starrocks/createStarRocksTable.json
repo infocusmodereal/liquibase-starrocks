@@ -1,0 +1,9 @@
+{
+  "snapshot": {
+    "objects": {
+      "liquibase.structure.core.Table": [{"table": {"name": "harness_table"}}],
+      "liquibase.structure.core.Column": [{"column": {"name": "id"}}, {"column": {"name": "name"}}],
+      "liquibase.structure.core.PrimaryKey": [{"primaryKey": {"name": "PRIMARY"}}]
+    }
+  }
+}

@@ -32,7 +32,7 @@ repositories {
 
 dependencies {
     // MySQL JDBC driver - StarRocks is compatible with MySQL protocol
-    implementation("com.mysql:mysql-connector-j:8.4.0")
+    runtimeOnly("com.mysql:mysql-connector-j:8.4.0")
 
     // Kotlin standard library - explicitly included to avoid runtime errors
     implementation(kotlin("stdlib"))
@@ -43,15 +43,11 @@ dependencies {
 
     // Test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    testImplementation("org.testcontainers:junit-jupiter:1.19.0")
     testImplementation("org.liquibase:liquibase-core:4.23.0")
     // Mock the executor boundary while exercising the real lock service lifecycle.
     testImplementation("org.mockito:mockito-core:5.5.0")
     testRuntimeOnly("org.liquibase:liquibase-core:${findProperty("testLiquibaseVersion") ?: "5.0.3"}")
 
-    // Other dependencies
-    implementation("org.yaml:snakeyaml:2.0")
-    implementation("com.typesafe:config:1.4.2")
 }
 
 java {
@@ -69,7 +65,14 @@ tasks.test {
     useJUnitPlatform()
 }
 
-// Configure the Shadow plugin to create a fat JAR with all dependencies
+// Separate outputs prevent the thin JAR from overwriting the published CLI artifact.
+tasks.jar { archiveClassifier.set("thin") }
+tasks.withType<AbstractArchiveTask>().configureEach {
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+}
+
+// Bundle only Kotlin; Liquibase and JDBC are supplied by the host.
 tasks.shadowJar {
     mustRunAfter(tasks.jar)
     mergeServiceFiles()
@@ -94,6 +97,7 @@ publishing {
         create<MavenPublication>("maven") {
             artifactId = "liquibase-starrocks"
             from(components["java"])
+            setArtifacts(listOf(tasks.shadowJar, tasks.named("sourcesJar"), tasks.named("javadocJar")))
             pom {
                 name.set("Liquibase StarRocks Extension")
                 description.set("Liquibase extension for StarRocks database")
@@ -119,21 +123,6 @@ publishing {
             }
         }
     }
-    repositories {
-        maven {
-            name = "OSSRH"
-            url = if (version.toString().endsWith("SNAPSHOT"))
-                uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            else
-                uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = (project.findProperty("ossrhUsername") as String?)
-                    ?: System.getenv("OSSRH_USERNAME")
-                password = (project.findProperty("ossrhPassword") as String?)
-                    ?: System.getenv("OSSRH_PASSWORD")
-            }
-        }
-    }
 }
 
 // Signing configuration – only active for release builds
@@ -151,105 +140,71 @@ signing {
     }
 }
 
-// Task: Generate checksums and signatures for artifacts
-tasks.register("generateChecksumsAndSignatures") {
+// Prepare a signed, inspectable bundle. Upload/publish is a separate maintainer action.
+tasks.register("prepareCentralBundle") {
     group = "publishing"
-    description = "Generates MD5, SHA1 checksums and GPG signatures for each artifact."
-    dependsOn("jar", "shadowJar", "sourcesJar", "javadocJar", "generatePomFileForMavenPublication")
+    description = "Stages the signed publication and checksums without publishing it"
+    dependsOn("signMavenPublication")
     doLast {
-        // Define the base file name (ensure this matches your artifact naming)
-        val baseName = "liquibase-starrocks-${project.version}"
-        // Copy the generated POM from the publications folder to build/libs with the desired name.
-        val pomSource = file("build/publications/maven/pom-default.xml")
-        val pomFile = file("build/libs/$baseName.pom")
-        if (pomSource.exists()) {
-            pomSource.copyTo(pomFile, overwrite = true)
-        }
-        // Create a list of files that should be processed.
-        val filesToProcess = listOf(
-            file("build/libs/$baseName.jar"),
-            file("build/libs/$baseName-sources.jar"),
-            file("build/libs/$baseName-javadoc.jar"),
-            pomFile
-        ).filter { it.exists() }
-
-        // Get the signing key ID from properties.
-        val signingKeyId = project.findProperty("signing.keyId") as String? ?: throw GradleException("signing.keyId not set")
-
-        filesToProcess.forEach { artifact ->
-            // Generate MD5 and SHA1 checksums.
-            val md5 = computeChecksum(artifact, "MD5")
-            val sha1 = computeChecksum(artifact, "SHA-1")
-            file("${artifact.absolutePath}.md5").writeText(md5)
-            file("${artifact.absolutePath}.sha1").writeText(sha1)
-            // Use GPG to sign the file with the specified key.
-            val signingPassword = project.findProperty("signing.password") as String? ?: ""
-            exec {
-                commandLine(
-                    "gpg",
-                    "--batch",
-                    "--yes",
-                    "--pinentry-mode", "loopback",
-                    "--passphrase", signingPassword,
-                    "--local-user", signingKeyId,
-                    "--armor",
-                    "--detach-sign",
-                    artifact.absolutePath
-                )
+        check(isRelease) { "Use -PisRelease=true for a release bundle" }
+        val directory = layout.buildDirectory.dir("central/io/github/infocusmodereal/liquibase-starrocks/${project.version}").get().asFile
+        delete(layout.buildDirectory.dir("central"))
+        directory.mkdirs()
+        val name = "liquibase-starrocks-${project.version}"
+        val inputs = mapOf(
+            "$name.jar" to tasks.shadowJar.get().archiveFile.get().asFile,
+            "$name-sources.jar" to tasks.named<Jar>("sourcesJar").get().archiveFile.get().asFile,
+            "$name-javadoc.jar" to tasks.named<Jar>("javadocJar").get().archiveFile.get().asFile,
+            "$name.pom" to layout.buildDirectory.file("publications/maven/pom-default.xml").get().asFile
+        )
+        inputs.forEach { (target, source) ->
+            check(source.isFile && file("${source.path}.asc").isFile) { "Missing signed publication artifact: $target" }
+            source.copyTo(directory.resolve(target), overwrite = true)
+            file("${source.path}.asc").copyTo(directory.resolve("$target.asc"), overwrite = true)
+            mapOf("md5" to "MD5", "sha1" to "SHA-1", "sha256" to "SHA-256", "sha512" to "SHA-512").forEach { (extension, algorithm) ->
+                directory.resolve("$target.$extension").writeText(computeChecksum(source, algorithm))
             }
         }
     }
 }
 
-// Task: Create the deployment bundle (ZIP) with proper directory structure and all required files
 tasks.register<Zip>("createCentralBundle") {
     group = "publishing"
-    description = "Creates a ZIP bundle for deployment including artifacts, checksums, and signatures."
-    dependsOn("generateChecksumsAndSignatures", "jar", "shadowJar", "sourcesJar", "javadocJar", "generatePomFileForMavenPublication")
-    archiveFileName.set("central-bundle.zip")
-    destinationDirectory.set(file("$buildDir/distributions"))
-
-    // Place files under the Maven directory structure: groupId/artifactId/version
-    val artifactDir = "io/github/infocusmodereal/liquibase-starrocks/${project.version}/"
-
-    from("build/libs") {
-        include(
-            "${project.name}-${project.version}.jar",
-            "${project.name}-${project.version}-sources.jar",
-            "${project.name}-${project.version}-javadoc.jar",
-            "${project.name}-${project.version}.pom",
-            "${project.name}-${project.version}.jar.md5",
-            "${project.name}-${project.version}.jar.sha1",
-            "${project.name}-${project.version}-sources.jar.md5",
-            "${project.name}-${project.version}-sources.jar.sha1",
-            "${project.name}-${project.version}-javadoc.jar.md5",
-            "${project.name}-${project.version}-javadoc.jar.sha1",
-            "${project.name}-${project.version}.pom.md5",
-            "${project.name}-${project.version}.pom.sha1",
-            "${project.name}-${project.version}.jar.asc",
-            "${project.name}-${project.version}-sources.jar.asc",
-            "${project.name}-${project.version}-javadoc.jar.asc",
-            "${project.name}-${project.version}.pom.asc"
-        )
-    }
-    into(artifactDir)
+    dependsOn("prepareCentralBundle")
+    from(layout.buildDirectory.dir("central"))
+    archiveFileName.set("liquibase-starrocks-${project.version}-central.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
 }
 
-// Task: Upload the deployment bundle using the Portal Publisher API via curl
-tasks.register<Exec>("uploadToCentral") {
-    group = "publishing"
-    description = "Uploads the deployment bundle to Maven Central via the Portal Publisher API."
-    dependsOn("createCentralBundle")
-    val bundleZip = file("$buildDir/distributions/central-bundle.zip")
-    val centralToken = (project.findProperty("centralToken") as String?)
-        ?: System.getenv("CENTRAL_TOKEN")
-        ?: throw GradleException("Central token not provided. Define centralToken in gradle.properties or as CENTRAL_TOKEN env var.")
-    commandLine(
-        "curl",
-        "--request", "POST",
-        "--verbose",
-        "--header", "Authorization: Bearer $centralToken",
-        "--form", "bundle=@${bundleZip.absolutePath}",
-        "https://central.sonatype.com/api/v1/publisher/upload"
-    )
+// Keep the upstream harness isolated from the oldest-runtime unit test classpath.
+val harness = sourceSets.create("harness")
+harness.compileClasspath += sourceSets.main.get().output
+harness.runtimeClasspath += sourceSets.main.get().output
+
+dependencies {
+    add(harness.implementationConfigurationName, "org.liquibase:liquibase-test-harness:1.0.12") { isTransitive = false }
+    add(harness.implementationConfigurationName, "org.liquibase:liquibase-core:5.0.3")
+    add(harness.implementationConfigurationName, "org.apache.groovy:groovy:5.0.6")
+    add(harness.implementationConfigurationName, "org.apache.groovy:groovy-json:5.0.6")
+    add(harness.implementationConfigurationName, "org.spockframework:spock-core:2.4-groovy-5.0")
+    add(harness.implementationConfigurationName, "org.junit.platform:junit-platform-suite:6.1.0")
+    add(harness.implementationConfigurationName, "org.junit.jupiter:junit-jupiter:6.1.0")
+    add(harness.implementationConfigurationName, "org.skyscreamer:jsonassert:1.5.3")
+    add(harness.implementationConfigurationName, "org.yaml:snakeyaml:2.6")
+    add(harness.implementationConfigurationName, "commons-io:commons-io:2.22.0")
+    add(harness.runtimeOnlyConfigurationName, "org.junit.platform:junit-platform-launcher:6.1.0")
+    add(harness.runtimeOnlyConfigurationName, "com.mysql:mysql-connector-j:8.4.0")
+    add(harness.runtimeOnlyConfigurationName, kotlin("stdlib"))
+}
+
+tasks.register<Test>("harnessTest") {
+    description = "Runs the upstream Liquibase harness against a disposable StarRocks database"
+    group = "verification"
+    testClassesDirs = harness.output.classesDirs
+    classpath = harness.runtimeClasspath
+    useJUnitPlatform()
+    systemProperty("dbUrl", providers.gradleProperty("harnessUrl").getOrElse("jdbc:mysql://localhost:9030/harness_test"))
+    systemProperty("dbVersion", providers.gradleProperty("harnessStarRocksVersion").getOrElse("4.1.1"))
+    systemProperty("changeObjects", "createStarRocksTable")
+    systemProperty("revalidateSql", "true")
 }

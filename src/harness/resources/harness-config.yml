@@ -1,0 +1,10 @@
+inputFormat: xml
+revalidateSql: true
+outputResourcesBase: build/harness-generated
+context: test
+databasesUnderTest:
+  - name: starrocks
+    version: DBVERSION
+    url: jdbc:mysql://localhost:9030/harness_test
+    username: root
+    password: ""
