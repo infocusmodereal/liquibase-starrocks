@@ -43,16 +43,25 @@ run_liquibase diff diff --reference-url="jdbc:mysql://$starrocks_host:$starrocks
 generated_dir="$(mktemp -d integration/.cache/generated.XXXXXX)"
 run_liquibase generate-changelog generate-changelog --changelog-file="$generated_dir/changelog.yaml"
 
-sql -e 'CREATE DATABASE `meta-db`;'
-metadata_args=(--liquibase-catalog-name=meta-db --database-changelog-table-name=change-log --database-changelog-lock-table-name=change-lock)
+metadata_db=meta-db
+metadata_history=change-log
+metadata_lock=change-lock
+if [[ "$actual_starrocks_version" == 3.1.* ]]; then
+  # This server rejects hyphens even in quoted database/table names.
+  metadata_db=meta_db
+  metadata_history=change_log
+  metadata_lock=change_lock
+fi
+sql -e "CREATE DATABASE \`$metadata_db\`;"
+metadata_args=(--liquibase-catalog-name="$metadata_db" --database-changelog-table-name="$metadata_history" --database-changelog-lock-table-name="$metadata_lock")
 run_liquibase metadata "${metadata_args[@]}" --changelog-file=integration/changelogs/native.yaml update
 run_liquibase metadata-repeat "${metadata_args[@]}" --changelog-file=integration/changelogs/native.yaml update
 run_liquibase metadata-tag "${metadata_args[@]}" tag --tag=metadata
 run_liquibase metadata-clear "${metadata_args[@]}" clear-checksums
 run_liquibase metadata-recalculate "${metadata_args[@]}" --changelog-file=integration/changelogs/native.yaml update
 run_liquibase metadata-rollback "${metadata_args[@]}" --changelog-file=integration/changelogs/native.yaml rollback-count --count=1
-[[ "$(sql -D meta-db -N -e 'SELECT COUNT(*) FROM `change-log`;')" == 0 ]]
-[[ "$(sql -D meta-db -N -e 'SELECT LOCKED FROM `change-lock` WHERE ID=1;')" == 0 ]]
+[[ "$(sql -D "$metadata_db" -N -e "SELECT COUNT(*) FROM \`$metadata_history\`;")" == 0 ]]
+[[ "$(sql -D "$metadata_db" -N -e "SELECT LOCKED FROM \`$metadata_lock\` WHERE ID=1;")" == 0 ]]
 
 # Separate processes, including a race on an entirely new metadata database.
 sql -e 'CREATE DATABASE race_test;'
@@ -88,6 +97,14 @@ expect_failure timeout 'Could not acquire change log lock' --changelog-lock-wait
 [[ "$(sql -D liquibase_test -N -e 'SELECT LOCKED FROM DATABASECHANGELOGLOCK WHERE ID=1;')" == 1 ]]
 run_liquibase timeout-recover release-locks
 assert_unlocked
+# Recover a crash between reserving the catalog name and setting LOCKED.
+sql -D liquibase_test -e 'CREATE VIEW DATABASECHANGELOGLOCK_MUTEX AS SELECT 1 AS ID;'
+expect_failure orphan-mutex 'Could not acquire change log lock' --changelog-lock-wait-time-in-minutes=0 --changelog-lock-poll-rate=1 --changelog-file=integration/changelogs/native.yaml update
+[[ "$(sql -D liquibase_test -N -e "SHOW TABLES LIKE 'DATABASECHANGELOGLOCK_MUTEX';")" == DATABASECHANGELOGLOCK_MUTEX ]]
+run_liquibase orphan-mutex-recover release-locks
+[[ -z "$(sql -D liquibase_test -N -e "SHOW TABLES LIKE 'DATABASECHANGELOGLOCK_MUTEX';")" ]]
+assert_unlocked
+
 sql -e 'CREATE DATABASE tag_test;'
 run_liquibase tag-ties-update --url="jdbc:mysql://$starrocks_host:$starrocks_port/tag_test" --changelog-file=integration/changelogs/tag-ties.yaml update
 sql -D tag_test -e 'UPDATE DATABASECHANGELOG SET DATEEXECUTED=NOW(), ORDEREXECUTED=1 WHERE ID IS NOT NULL;'

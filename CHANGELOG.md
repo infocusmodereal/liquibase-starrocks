@@ -7,7 +7,10 @@
 - Probe actual StarRocks identity/version and support custom JDBC ports.
 - Respect Liquibase metadata catalog/table names and escaped changeset identity.
 - Make explicit lock recovery idempotent and reset cached initialization state.
-- Avoid clearing existing lock rows during initialization; exercise competing processes.
+- Serialize acquisition/initialization with a reserved catalog view after reproducing
+  concurrent ownership with conditional row updates; recover orphan reservations.
+- Add CREATE VIEW/DROP VIEW requirements for locking; mixed 0.2/0.3 writers are unsupported.
+- Adapt core ADD COLUMN syntax and exercise add/drop/rename against real servers.
 - Add metadata replication configuration and validate scalar type parameters.
 - Discover PRIMARY keys for snapshots and stop querying unsupported constraints.
 - Select a single changeset identity when tagging tied timestamps/orders.

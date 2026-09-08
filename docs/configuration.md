@@ -26,7 +26,9 @@ an explicit, backed-up migration and a window with no active Liquibase processes
 
 The migration account needs access to its application/metadata databases,
 metadata queries, DDL required by its changelog, and SELECT/INSERT/UPDATE/DELETE
-on the two Liquibase metadata tables. Integration uses root only on disposable
+on the two Liquibase metadata tables. It also needs CREATE VIEW and DROP VIEW
+for the reserved `<lock-table-name>_MUTEX` catalog view used for exclusion.
+Reserve this name for the connector; do not use it for application objects. Integration uses root only on disposable
 containers. Production credentials belong in your secret management system.
 
 ## Native table change

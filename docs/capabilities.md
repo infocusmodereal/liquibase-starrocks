@@ -16,14 +16,25 @@ result is recorded in [COMPATIBILITY.md](../COMPATIBILITY.md).
 | `createStarRocksTable` | PRIMARY or DUPLICATE OLAP table, explicit keys/distribution, column types/nullability, buckets and replication. |
 | Core `createTable` | Use native `createStarRocksTable` or raw SQL for explicit OLAP layout. Generic creation is not advertised. |
 | `modifyDataType` | Rejected during validation and SQL generation, including metadata alterations. Use reviewed SQL and wait for asynchronous schema completion. |
-| Other column alterations | Use explicit SQL and verify completion. Declarative add/drop/rename coverage is not yet a support claim. |
+| `addColumn`, `dropColumn`, `renameColumn` | ADD COLUMN adapts the core generator; add/drop and rename/reverse are exercised. Rename is unavailable on 3.1.7. Add/drop can be asynchronous: wait for completion before dependent statements. |
 | `snapshot` | Tables, columns and PRIMARY keys. StarRocks primary keys come from `SHOW CREATE TABLE`, because JDBC key metadata is empty. DUPLICATE keys are not relational primary keys. |
 | `generate-changelog`, `diff` | Experimental inspection. Standard snapshots omit distribution, buckets and properties, so generated changelogs are not lossless or ready to replay. |
 | Foreign keys, unique constraints, relational indexes, sequences | Not represented as supported database objects. StarRocks-specific indexes require SQL. |
 
-The lock test starts two CLI processes against a fresh database and checks
-one migration record, one event and a released lock. This is bounded
-single-node evidence, not a proof of distributed mutual exclusion under every
-failure mode. Multi-node failover and shared-data deployments are outside the
-current release matrix. Use a single migration deployment job per database
-when operating outside the tested conditions.
+Lock acquisition first creates a reserved catalog view named
+`<databaseChangeLogLockTableName>_MUTEX`, then uses the usual Liquibase lock row.
+This is necessary because a conditional StarRocks UPDATE is not sufficient for
+mutual exclusion: repeated two-process testing reproduced dual ownership.
+Creating the same view without `IF NOT EXISTS` admits one creator; only SQL
+error 1050 is treated as contention. Other errors remain failures.
+
+Initialization uses the same reservation, and ordinary release drops it only
+after releasing the row. A crash or release failure retains the reservation;
+`release-locks` explicitly recovers it, even if LOCKED is false. There is no lease
+expiry or automatic lock stealing. Both CREATE VIEW and DROP VIEW privileges
+are required on the metadata database. Do not run 0.2 and 0.3 migrations together.
+
+The integration test starts two CLI processes against a fresh database and checks
+one migration record, one event and a released lock. Multi-node failover and
+shared-data deployments remain outside the matrix. Exact release evidence is
+required before extending concurrency claims to other topologies.

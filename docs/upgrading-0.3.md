@@ -16,9 +16,12 @@ server/runtime combination you deploy before replacing the extension JAR.
    not the CLI distribution.
 4. Server detection now checks the product/version and `current_version()`.
    A misleading hostname or port no longer selects StarRocks. Check proxy access.
-5. Existing metadata tables remain in place with their current replication.
+5. Stop all older migration jobs before upgrading. 0.3 adds a reserved
+   `<lock-table-name>_MUTEX` view and requires CREATE VIEW/DROP VIEW privileges
+   in the metadata database. Mixed 0.2/0.3 concurrent writers are unsupported.
+6. Existing metadata tables remain in place with their current replication.
    Custom locations and names use Liquibase's catalog settings consistently.
-6. Validate, preview, update, repeat update and test your rollback/recovery
+7. Validate, preview, update, repeat update and test your rollback/recovery
    procedure on a disposable copy before production rollout.
 
 This release does not automatically repair historical silent changes or modify

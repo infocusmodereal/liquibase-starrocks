@@ -117,6 +117,17 @@ class StarRocksDatabase : AbstractJdbcDatabase() {
             else -> super.supports(type)
         }
 
+    override fun isLiquibaseObject(obj: liquibase.structure.DatabaseObject): Boolean {
+        if (obj is liquibase.structure.core.View) {
+            val expected = liquibase.structure.core.View()
+                .setName(databaseChangeLogLockTableName + "_MUTEX")
+                .setSchema(liquibase.structure.core.Schema(liquibaseCatalogName, liquibaseSchemaName))
+            return liquibase.diff.compare.DatabaseObjectComparatorFactory.getInstance()
+                .isSameObject(obj, expected, null, this)
+        }
+        return super.isLiquibaseObject(obj)
+    }
+
     override fun supportsAutoIncrement(): Boolean = false
 
     override fun supportsInitiallyDeferrableColumns(): Boolean = false
