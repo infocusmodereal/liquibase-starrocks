@@ -1,6 +1,6 @@
 # Compatibility and validation
 
-Local validation on 2026-09-08, for the proposed 0.1.3 changes. These results
+Validation on 2026-09-08 for the released 0.1.3 changes. These results
 do not apply retroactively to the published 0.1.2 artifact.
 
 | Liquibase runtime | StarRocks | Integration JDK | Unit tests | Integration |
@@ -73,7 +73,11 @@ Detailed local logs and before/after reports are under ignored
 `integration/.cache/review/`. CI uploads test reports and integration logs.
 No publishing credentials are required for these checks.
 
-Maven Central metadata was checked on 2026-09-08 and lists 0.1.2 as the latest
-published extension. The default development version is now 0.1.3-SNAPSHOT.
-Publishing a signed 0.1.3 and verifying the installed public artifact remain
-release steps; no new Maven release was published as part of these local tests.
+Version 0.1.3 was published to Maven Central on 2026-09-08. The public plugin
+JAR, sources JAR, Javadoc JAR and POM were downloaded and their SHA-256 hashes
+matched the signed release bundle. The exact signed plugin JAR also passed
+the migration, checksum and abandoned-lock recovery integration test before
+publication. See the [0.1.3 release](https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.1.3).
+
+The default development version on this branch is 0.2.0-SNAPSHOT. It contains
+the separate Liquibase 5.0.3 compile-API migration and has not been released.
