@@ -134,4 +134,12 @@ for _ in $(seq 1 60); do
 done
 [[ "$(column_exists added_column)" == 0 ]]
 assert_unlocked
+run_liquibase duplicate --changelog-file=integration/changelogs/native-duplicate.yaml update
+sql -D liquibase_test -e "INSERT INTO duplicate_table VALUES (1, 'first', 42), (1, NULL, 43);"
+[[ "$(sql -D liquibase_test -N -e 'SELECT COUNT(*) FROM duplicate_table;')" == 2 ]]
+[[ "$(sql -D liquibase_test -N -e 'SELECT SUM(amount) FROM duplicate_table;')" == 85 ]]
+[[ "$(sql -N -e "SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.columns WHERE TABLE_SCHEMA='liquibase_test' AND TABLE_NAME='duplicate_table' AND COLUMN_NAME='label';")" == 255 ]]
+run_liquibase duplicate-rollback --changelog-file=integration/changelogs/native-duplicate.yaml rollback-count --count=1
+[[ -z "$(sql -D liquibase_test -N -e "SHOW TABLES LIKE 'duplicate_table';")" ]]
+assert_unlocked
 echo 'ALL SCENARIOS PASSED (migration-capabilities-v2)'

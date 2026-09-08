@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 import subprocess
 from datetime import datetime, timezone
@@ -15,10 +16,13 @@ parser.add_argument('--artifact-kind', default='source-build')
 args = parser.parse_args()
 log = Path(args.log).read_text()
 assert 'ALL SCENARIOS PASSED (migration-capabilities-v2)' in log
-assert 'STARROCKS_VERSION=' + args.starrocks in log
+assert re.search(r'STARROCKS_VERSION=' + re.escape(args.starrocks) + r'(?:-|\s|$)', log)
+assert 'Liquibase Version: ' + args.liquibase in log
+assert 'using Java ' + args.java + '.' in log
 jar_sha = hashlib.sha256(Path(args.jar).read_bytes()).hexdigest()
 assert 'CONNECTOR_SHA256=' + jar_sha in log
 image = json.loads(subprocess.check_output(['docker', 'image', 'inspect', args.image]))[0]
+assert image['Architecture'] == args.architecture
 record = {
     'connectorVersion': args.connector_version,
     'artifactKind': args.artifact_kind,
@@ -27,7 +31,7 @@ record = {
     'liquibase': args.liquibase, 'starrocks': args.starrocks,
     'java': int(args.java), 'jdbcDriver': 'com.mysql:mysql-connector-j:8.4.0',
     'os': 'linux', 'architecture': args.architecture, 'topology': 'allin1-single-node',
-    'image': args.image, 'imageDigest': image['RepoDigests'][0],
+    'image': args.image, 'imageDigest': image['RepoDigests'][0], 'imageId': image['Id'],
     'scenarioSet': 'migration-capabilities-v2', 'result': 'passed',
     'validatedAt': datetime.now(timezone.utc).isoformat(), 'evidence': args.evidence,
 }
