@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog-ext https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+    <changeSet id="native-harness" author="integration">
+        <ext:createStarRocksTable tableName="harness_table" keyColumns="id" distributionColumns="id">
+            <column name="id" type="INT"/>
+            <column name="name" type="VARCHAR(42)"/>
+        </ext:createStarRocksTable>
+    </changeSet>
+</databaseChangeLog>

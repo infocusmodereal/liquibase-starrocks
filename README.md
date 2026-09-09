@@ -1,142 +1,84 @@
-# liquibase-starrocks
+# Liquibase StarRocks
 
-**Liquibase-StarRocks** is a plugin developed to integrate **Liquibase** schema management capabilities with **StarRocks**, 
-a high-performance, real-time analytic database designed for sub-second queries at scale. This plugin allows developers and database administrators to automate and 
-manage schema changes in StarRocks, ensuring version control and seamless database migrations.
+Manage StarRocks migrations with Liquibase. The extension provides database
+recognition, changelog tracking, lock lifecycle handling and StarRocks SQL
+adaptations. Published release: **0.2.0**. The `feat/0.3` branch contains the
+**0.3.0 release candidate work**; it is not yet published.
 
-## Project Structure
+## Install the released extension
 
+Download the [0.2.0 JAR](https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.2.0)
+and MySQL Connector/J **8.4.0**, and place both in your Liquibase CLI `lib/`
+directory. Java 17 is the minimum for the extension; use the exact Java and
+Liquibase versions in the [compatibility matrix](COMPATIBILITY.md).
+
+For an embedded application, add the Maven dependency
+`io.github.infocusmodereal:liquibase-starrocks:0.2.0` alongside Liquibase core.
+The CLI JAR includes Kotlin, and excludes Liquibase core and the JDBC driver.
+
+## Run a migration
+
+Create `liquibase.properties` using a dedicated migration account:
+
+```properties
+url=jdbc:mysql://localhost:9030/your_database
+driver=com.mysql.cj.jdbc.Driver
+username=your_username
+password=your_password
+changeLogFile=changelog.yaml
 ```
-liquibase-starrocks/
-├── build.gradle.kts           # Gradle build configuration
-├── settings.gradle.kts        # Gradle settings
-├── src/
-│   ├── main/
-│   │   ├── kotlin/
-│   │   │   └── liquibase/
-│   │   │       └── ext/
-│   │   │           └── starrocks/
-│   │   │               ├── database/       # Database connection and configuration
-│   │   │               ├── lockservice/    # Lock service implementation
-│   │   │               ├── params/         # Parameter handling
-│   │   │               └── sqlgenerator/   # SQL generation
-│   │   └── resources/
-│   │       └── META-INF/
-│   │           └── services/              # Service provider configuration files
-│   └── test/
-│       ├── kotlin/            # Test code
-│       └── resources/         # Test resources
+
+Create `changelog.yaml`:
+
+```yaml
+databaseChangeLog:
+  - changeSet:
+      id: create-events
+      author: example
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE events (id INT NOT NULL, name VARCHAR(255))
+              ENGINE = OLAP PRIMARY KEY(id)
+              DISTRIBUTED BY HASH(id) BUCKETS 1
+              PROPERTIES ('replication_num'='1');
+      rollback:
+        - sql:
+            sql: DROP TABLE events;
 ```
+
+Run `liquibase validate`, `liquibase update-sql` and `liquibase update`.
+The database must already exist. Replication 1 is suitable for a single-node
+example; choose a production layout for your cluster. Rollback is an explicit
+reverse migration, not a transactional undo of StarRocks DDL.
+
+## 0.3 development
+
+0.3 adds an explicit `createStarRocksTable` change, version probing, metadata
+configuration and broader validation. It rejects `modifyDataType` instead of
+silently recording a change without altering a column. Review the
+[upgrade notes](docs/upgrading-0.3.md) before testing existing changelogs.
+
+- [Capabilities and limitations](docs/capabilities.md)
+- [Configuration and native table examples](docs/configuration.md)
+- [Exact compatibility evidence](COMPATIBILITY.md) and [candidate matrix](compatibility/candidates.json)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Contributing](CONTRIBUTING.md) and [local development](DEVELOPMENT.md)
+- [Architecture](docs/architecture.md) and [0.3 plan](docs/roadmap-0.3.md)
+- [Release process](PUBLISHING.md), [security reporting](SECURITY.md), [support](SUPPORT.md)
 
 ## Development
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for local setup, IDE configuration,
-snapshot builds, and the integration workflow. For a local build, run
-`./scripts/dev` (automatically locates Homebrew JDK 17 on macOS).
-See [COMPATIBILITY.md](COMPATIBILITY.md) for the tested runtime matrix and
-the distinction between runtime compatibility and upgrading the compile API.
-
-### Building the Project
-
 ```bash
-./gradlew build shadowJar
+./scripts/dev test prepareIntegrationJar -PbaseVersion=0.3.0
+python3 scripts/verify-project.py --jar build/integration/liquibase-starrocks.jar
 ```
 
-### Running Tests
+The helper selects JDK 17 on macOS and disables release signing. See
+[DEVELOPMENT.md](DEVELOPMENT.md) for Docker tests and the official Liquibase
+Test Harness. Tests use disposable databases and never need publishing credentials.
 
-```bash
-./gradlew test
-```
-
-### Integration Testing (Docker Compose)
-
-This spins up StarRocks and runs Liquibase against it using the plugin.
-
-```bash
-docker compose -f docker-compose.integration.yml up --build --abort-on-container-exit --exit-code-from integration
-```
-
-To clean up:
-
-```bash
-docker compose -f docker-compose.integration.yml down -v
-```
-
-### Publishing
-
-See `PUBLISHING.md` for the Maven Central release workflow.
-
-## Testing with Liquibase CLI
-
-To test this extension with Liquibase CLI, follow these steps:
-
-1. **Download Liquibase CLI** (make sure you have Java installed to run Liquibase):
-   ```bash
-   curl -L https://github.com/liquibase/liquibase/releases/download/v4.23.0/liquibase-4.23.0.zip -o liquibase.zip
-   unzip liquibase.zip -d liquibase
-   ```
-
-2. **Build the extension with Shadow JAR**:
-   ```bash
-   ./scripts/dev prepareIntegrationJar
-   ```
-
-   > **Note**: It's important to use the `shadowJar` task to create a fat JAR that includes all necessary dependencies, including the Kotlin runtime. This is required for the extension to work properly with Liquibase.
-
-3. **Copy the extension JAR to Liquibase's lib directory**:
-   ```bash
-   cp build/integration/liquibase-starrocks.jar liquibase/lib/
-   ```
-
-4. **Copy the MySQL connector to Liquibase's lib directory**:
-   ```bash
-   # You can download it from Maven Central or use the one in your local Maven repository
-   cp ~/.m2/repository/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar liquibase/lib/
-   ```
-
-5. **Create a liquibase.properties file**:
-   ```properties
-   # liquibase.properties
-   url=jdbc:mysql://localhost:9030/your_database
-   driver=com.mysql.cj.jdbc.Driver
-   username=your_username
-   password=your_password
-   changeLogFile=changelog.yaml
-   ```
-
-**IMPORTANT:** The extension will try to figure out if this is StarRocks database by checking if the URL of the 
-connection contains either the key starrocks or the default port 9030. This is necessary so that Liquibase does not 
-attempt to treat this as a MySQL connection.
-
-6. **Create a changelog file (changelog.yaml)**:
-   ```yaml
-   databaseChangeLog:
-     - changeSet:
-         id: 1
-         author: liquibase
-         changes:
-           - sql:
-               sql: |
-                 CREATE TABLE test_table (
-                   id INT NOT NULL,
-                   name VARCHAR(255)
-                 ) ENGINE = OLAP
-                 PRIMARY KEY (`id`)
-                 DISTRIBUTED BY HASH(`id`)
-                 PROPERTIES ('replication_num' = '1');
-   ```
-
-7. **Run Liquibase update**:
-   ```bash
-   ./liquibase/liquibase update --changelog-file=changelog.yaml
-   ```
-
-8. **Verify the changes in StarRocks**:
-   ```sql
-   -- Connect to your StarRocks database and run:
-   SHOW TABLES;
-   DESCRIBE test_table;
-   ```
 ## License
 
-This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
+[Apache License 2.0](LICENSE). See [dependency notes](docs/dependencies.md) for
+host dependencies and the separate upstream test harness.

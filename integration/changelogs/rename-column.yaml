@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: rename-column
+      author: integration
+      changes:
+        - renameColumn:
+            tableName: plugin_integration
+            oldColumnName: added_column
+            newColumnName: renamed_column
+            columnDataType: VARCHAR(32)

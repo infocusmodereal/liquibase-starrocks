@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: native-duplicate
+      author: integration
+      changes:
+        - createStarRocksTable:
+            tableName: duplicate_table
+            keyModel: DUPLICATE
+            keyColumns: id
+            distributionColumns: id
+            columns:
+              - column: {name: id, type: INT}
+              - column: {name: label, type: VARCHAR}
+              - column: {name: amount, type: DECIMAL}

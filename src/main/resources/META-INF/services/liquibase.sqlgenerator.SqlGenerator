@@ -7,3 +7,4 @@ liquibase.ext.starrocks.sqlgenerator.RemoveChangeSetRanStatusStarRocks
 liquibase.ext.starrocks.sqlgenerator.TagDatabaseGeneratorStarRocks
 liquibase.ext.starrocks.sqlgenerator.UnlockDatabaseChangelogStarRocks
 liquibase.ext.starrocks.sqlgenerator.UpdateChangeSetChecksumStarRocks
+liquibase.ext.starrocks.sqlgenerator.AddColumnStarRocks

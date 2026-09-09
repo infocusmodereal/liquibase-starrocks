@@ -1,72 +1,64 @@
-# Publishing to Maven Central (Central Portal API)
+# Publishing a release
 
-This project publishes via the Central Portal API by uploading a signed bundle.
-Keep secrets out of git; `gradle.properties` and `secret-key.asc` are ignored.
+Publication is a separate maintainer action after the release candidate passes
+[compatibility validation](COMPATIBILITY.md). Building a bundle never uploads it.
 
 ## Prerequisites
-- Verified namespace for `io.github.infocusmodereal` in the Central Portal.
-- Central Portal **user token** (username + password) from
-  `https://central.sonatype.com/usertoken`.
-- GPG signing key with matching `secret-key.asc`.
 
-## 1) Configure secrets (local only)
-Option A: `gradle.properties` (gitignored)
-```
-centralToken=BASE64(username:password)
-signing.keyId=YOUR_KEY_ID
-signing.password=YOUR_KEY_PASSPHRASE
-```
+Use JDK 17 and the Gradle wrapper. The maintainer needs a verified
+`io.github.infocusmodereal` namespace in the [Central Portal](https://central.sonatype.com/).
+Normal builds and tests need no publishing credentials.
 
-Option B: environment variables
-```
-export CENTRAL_TOKEN="$(printf "%s:%s" "$CENTRAL_USER" "$CENTRAL_PASS" | base64 | tr -d '\n')"
-```
+For signing, place the private key in ignored `secret-key.asc` and its passphrase
+in the ignored `gradle.properties` property `signing.password`. Gradle signs in
+memory. Never copy either file into an integration container, source bundle or
+issue report. Neither GPG command-line arguments nor a local GPG installation
+are required.
 
-## 2) Build the Central bundle
-Local JDK 17 + gpg:
-```
-./gradlew clean shadowJar sourcesJar javadocJar generatePomFileForMavenPublication createCentralBundle \
-  -PbaseVersion=0.2.0 -PisRelease=true
+## Prepare the candidate
+
+From the reviewed release commit, run:
+
+```bash
+./gradlew --no-daemon -PbaseVersion=0.3.0 -PisRelease=true clean test createCentralBundle
 ```
 
-If you do not have a local JDK/gpg, use Docker:
-```
-docker run --rm -v "$PWD:/workspace" -w /workspace eclipse-temurin:17-jdk-jammy \
-  bash -lc 'apt-get update && apt-get install -y --no-install-recommends gnupg \
-    && rm -rf /var/lib/apt/lists/* \
-    && signing_pass=$(grep "^signing.password=" gradle.properties | cut -d= -f2-) \
-    && gpg --batch --yes --pinentry-mode loopback --passphrase "$signing_pass" --import secret-key.asc \
-    && ./gradlew clean shadowJar sourcesJar javadocJar generatePomFileForMavenPublication createCentralBundle \
-      -PbaseVersion=0.2.0 -PisRelease=true'
+The task fails if any of the four publication artifacts or signatures is missing.
+Verify every signature and checksum (a public keyring also works):
+
+```bash
+python3 scripts/verify-release.py --key secret-key.asc --directory build/central/io/github/infocusmodereal/liquibase-starrocks/0.3.0
 ```
 
-Bundle output:
-```
-build/distributions/central-bundle.zip
-```
+The verifier reads only public key packets and uses the PGP libraries from the
+pinned Gradle distribution. Run it with Java 17 or newer. It never decrypts or
+prints the signing key.
 
-## 3) Upload the bundle (Central Portal API)
-```
-TOKEN="${CENTRAL_TOKEN:-$(grep '^centralToken=' gradle.properties | cut -d= -f2-)}"
-curl --request POST \
-  --header "Authorization: Bearer ${TOKEN}" \
-  --form bundle=@build/distributions/central-bundle.zip \
-  "https://central.sonatype.com/api/v1/publisher/upload?name=liquibase-starrocks-0.2.0&publishingType=AUTOMATIC"
-```
+Inspect `build/distributions/liquibase-starrocks-0.3.0-central.zip`. It contains
+JAR, sources, Javadoc and POM, their signatures, and MD5/SHA-1/SHA-256/SHA-512
+checksums. Only the Kotlin runtime is bundled; the host supplies Liquibase and
+MySQL Connector/J. The thin development JAR has a separate classifier.
 
-This returns a deployment ID.
+## Validate before publication
 
-## 4) Check deployment status
-```
-curl --request POST \
-  --header "Authorization: Bearer ${TOKEN}" \
-  "https://central.sonatype.com/api/v1/publisher/status?id=<deployment_id>"
-```
+- Run the integration matrix against this exact signed JAR using `INTEGRATION_JAR`.
+- Run the upstream harness, unit matrix, documentation and artifact checks.
+- Record the source commit, artifact hash, exact runtime/server tuple, image
+  digest, architecture, scenarios and evidence URLs for each passing case.
+- Recheck changes from 0.2.0 and document any unsupported or blocked combinations.
+- Create release notes and preserve the tested bundle without rebuilding it.
 
-If you set `publishingType=USER_MANAGED`, finalize the publish in the portal UI.
+## Publish and verify
 
-## 5) Verify in Maven Central
-- `https://repo1.maven.org/maven2/io/github/infocusmodereal/liquibase-starrocks/0.2.0/`
+Upload the validated bundle through the Central Portal, inspect validation,
+and publish that deployment. Create the matching Git tag and GitHub release
+from the recorded source commit. Attach the same JARs and verification record.
 
-Indexing delay is normal. Maven Central may show the artifacts quickly, but
-third-party indexes (e.g. mvnrepository.com) can lag by hours or days.
+Download all four public files from Maven Central and compare SHA-256 with the
+validated bundle. Record the publication status separately from candidate test
+status. Indexing delays do not constitute a failed upload; inspect the existing
+deployment before retrying. Never publish a different bundle under the same version.
+
+The previous command-line `uploadToCentral` and passphrase-based checksum tasks
+were removed in 0.3 because they placed authentication material in process
+arguments and verbose output. Use the staged bundle workflow above.

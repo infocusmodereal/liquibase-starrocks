@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a reproducible connector defect
+body:
+  - type: textarea
+    id: versions
+    attributes:
+      label: Exact versions and environment
+      description: Connector, Liquibase, StarRocks, Java, JDBC driver, CPU architecture and topology.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction and expected versus actual behavior
+      description: Include a minimal sanitized changelog and command. Remove credentials and production data.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: INFO logs are useful. Review logs for secrets before posting.

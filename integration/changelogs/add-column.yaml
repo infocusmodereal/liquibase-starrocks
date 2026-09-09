@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-column
+      author: integration
+      changes:
+        - addColumn:
+            tableName: plugin_integration
+            columns:
+              - column:
+                  name: added_column
+                  type: VARCHAR(32)

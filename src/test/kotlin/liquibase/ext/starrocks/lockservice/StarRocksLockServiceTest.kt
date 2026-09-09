@@ -26,8 +26,13 @@ class StarRocksLockServiceTest {
     @BeforeEach
     fun setUp() {
         database = mock(StarRocksDatabase::class.java)
+        `when`(database.databaseChangeLogLockTableName).thenReturn("DATABASECHANGELOGLOCK")
+        `when`(database.escapeTableName(null, null, "DATABASECHANGELOGLOCK_MUTEX"))
+            .thenReturn("DATABASECHANGELOGLOCK_MUTEX")
         executor = mock(Executor::class.java)
-        service = spy(StarRocksLockService())
+        service = spy(object : StarRocksLockService() {
+            override fun initializeForRecovery() { init() }
+        })
         service.setDatabase(database)
         Scope.getCurrentScope().getSingleton(ExecutorService::class.java)
             .setExecutor("jdbc", database, executor)
@@ -76,6 +81,8 @@ class StarRocksLockServiceTest {
 
     @Test
     fun `fresh service can force release an abandoned lock`() {
+        `when`(executor.queryForObject(any(SelectFromDatabaseChangeLogLockStatement::class.java),
+            eq(Boolean::class.javaObjectType))).thenReturn(true)
         assertFalse(service.hasChangeLogLock())
         service.forceReleaseLock()
         verify(service).init()
@@ -93,6 +100,8 @@ class StarRocksLockServiceTest {
 
     @Test
     fun `forced release errors propagate`() {
+        `when`(executor.queryForObject(any(SelectFromDatabaseChangeLogLockStatement::class.java),
+            eq(Boolean::class.javaObjectType))).thenReturn(true)
         `when`(executor.update(any(UnlockDatabaseChangeLogStatement::class.java)))
             .thenThrow(DatabaseException("simulated update failure"))
         assertThrows(LockException::class.java) { service.forceReleaseLock() }
@@ -104,4 +113,49 @@ class StarRocksLockServiceTest {
         `when`(executor.update(any(UnlockDatabaseChangeLogStatement::class.java))).thenReturn(0)
         assertThrows(LockException::class.java) { service.releaseLock() }
     }
+    @Test
+    fun `force release of an already unlocked table is idempotent`() {
+        service.forceReleaseLock()
+        verify(executor, never()).update(any(UnlockDatabaseChangeLogStatement::class.java))
+    }
+
+    @Test
+    fun `reset invalidates initialization state before reconnect`() {
+        `when`(executor.queryForInt(any(liquibase.statement.core.RawSqlStatement::class.java)))
+            .thenReturn(1, 0)
+        assertTrue(service.isDatabaseChangeLogLockTableInitialized(false))
+        service.reset()
+        assertFalse(service.isDatabaseChangeLogLockTableInitialized(false))
+        verify(executor, times(2)).queryForInt(any(liquibase.statement.core.RawSqlStatement::class.java))
+    }
+
+    @Test
+    fun `catalog reservation contention cannot acquire the lock row`() {
+        `when`(executor.updatesDatabase()).thenReturn(true)
+        doThrow(DatabaseException(java.sql.SQLSyntaxErrorException("Exists", "42S01", 1050)))
+            .`when`(executor).execute(any(liquibase.statement.core.RawSqlStatement::class.java))
+        assertFalse(service.acquireLock())
+        verify(executor, never()).update(any(LockDatabaseChangeLogStatement::class.java))
+    }
+
+    @Test
+    fun `catalog permission failures remain visible instead of being treated as contention`() {
+        `when`(executor.updatesDatabase()).thenReturn(true)
+        doThrow(DatabaseException(java.sql.SQLSyntaxErrorException("Denied", "42000", 1142)))
+            .`when`(executor).execute(any(liquibase.statement.core.RawSqlStatement::class.java))
+        assertThrows(LockException::class.java) { service.acquireLock() }
+        verify(executor, never()).update(any(LockDatabaseChangeLogStatement::class.java))
+    }
+
+    @Test
+    fun `legacy duplicate-view error is contention but unrelated syntax errors fail`() {
+        `when`(executor.updatesDatabase()).thenReturn(true)
+        doThrow(DatabaseException(java.sql.SQLSyntaxErrorException("Unexpected exception: Table 'DATABASECHANGELOGLOCK_MUTEX' already exists", "HY000", 1064)))
+            .`when`(executor).execute(any(liquibase.statement.core.RawSqlStatement::class.java))
+        assertFalse(service.acquireLock())
+        doThrow(DatabaseException(java.sql.SQLSyntaxErrorException("Getting syntax error", "HY000", 1064)))
+            .`when`(executor).execute(any(liquibase.statement.core.RawSqlStatement::class.java))
+        assertThrows(LockException::class.java) { service.acquireLock() }
+    }
+
 }

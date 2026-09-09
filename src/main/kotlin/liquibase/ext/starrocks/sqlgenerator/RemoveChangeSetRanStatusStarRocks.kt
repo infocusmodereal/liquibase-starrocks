@@ -38,16 +38,17 @@ class RemoveChangeSetRanStatusStarRocks : RemoveChangeSetRanStatusGenerator() {
         database: Database,
         sqlGeneratorChain: SqlGeneratorChain<RemoveChangeSetRanStatusStatement>
     ): Array<Sql> {
-        val tableName = database.databaseChangeLogTableName
-        val schemaName = database.defaultSchemaName
+        val tableName = database.escapeTableName(
+            database.liquibaseCatalogName, database.liquibaseSchemaName, database.databaseChangeLogTableName
+        )
         val changeSet: ChangeSet = statement.changeSet
 
         // Use standard DELETE FROM syntax for StarRocks
         val deleteQuery = """
-            DELETE FROM `$schemaName`.$tableName 
-            WHERE ID = '${changeSet.id}' 
-            AND AUTHOR = '${changeSet.author}' 
-            AND FILENAME = '${changeSet.filePath}'
+            DELETE FROM $tableName
+            WHERE ID = '${database.escapeStringForDatabase(changeSet.id)}'
+            AND AUTHOR = '${database.escapeStringForDatabase(changeSet.author)}'
+            AND FILENAME = '${database.escapeStringForDatabase(changeSet.storedFilePath?.takeIf { it.isNotBlank() } ?: changeSet.filePath)}'
         """.trimIndent()
 
         return arrayOf(UnparsedSql(deleteQuery))

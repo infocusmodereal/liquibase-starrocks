@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - logicalFilePath: "schema'v1.yaml"
+  - changeSet:
+      id: "native'1"
+      author: "O'Connor"
+      changes:
+        - createStarRocksTable:
+            tableName: native_table
+            keyModel: PRIMARY
+            keyColumns: id
+            distributionColumns: id
+            columns:
+              - column:
+                  name: id
+                  type: INT
+              - column:
+                  name: name
+                  type: VARCHAR(42)
+              - column:
+                  name: amount
+                  type: DECIMAL(12,2)

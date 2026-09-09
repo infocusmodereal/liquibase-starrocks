@@ -37,18 +37,13 @@ class InitializeDatabaseChangeLogLockStarRocks : InitializeDatabaseChangeLogLock
         database: Database,
         sqlGeneratorChain: SqlGeneratorChain<InitializeDatabaseChangeLogLockTableStatement>
     ): Array<Sql> {
-        val tableName = database.databaseChangeLogLockTableName
-        val schemaName = database.defaultSchemaName
-
-        // Clear the table first - StarRocks requires a WHERE clause for DELETE
-        val clearDatabaseQuery = "DELETE FROM `$schemaName`.$tableName WHERE ID IS NOT NULL"
-
-        // Initialize with a single row
-        val initLockQuery = "INSERT INTO `$schemaName`.$tableName (ID, LOCKED) VALUES (1, false)"
-
-        return arrayOf(
-            UnparsedSql(clearDatabaseQuery),
-            UnparsedSql(initLockQuery)
+        val tableName = database.escapeTableName(
+            database.liquibaseCatalogName, database.liquibaseSchemaName, database.databaseChangeLogLockTableName
         )
+
+        // Never clear an existing owner's lock during concurrent initialization.
+        val initLockQuery = "INSERT INTO $tableName (ID, LOCKED) " +
+            "SELECT 1, false WHERE NOT EXISTS (SELECT 1 FROM $tableName WHERE ID = 1)"
+        return arrayOf(UnparsedSql(initLockQuery))
     }
 }

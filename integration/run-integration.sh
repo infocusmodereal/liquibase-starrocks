@@ -9,6 +9,12 @@ cache_dir="${CACHE_DIR:-$workspace/integration/.cache}"
 liquibase_version="${INTEGRATION_LIQUIBASE_VERSION:-4.23.0}"
 mkdir -p "$cache_dir"
 
+# Older Liquibase banners omit Java. Record the runtime used by its launcher.
+java_binary="${JAVA_HOME:+$JAVA_HOME/bin/}java"
+java_version="$("$java_binary" -XshowSettings:properties -version 2>&1 | awk '/^[[:space:]]*java.version = / { print $3; exit }')"
+[[ -n "$java_version" ]]
+echo "JAVA_VERSION=$java_version"
+
 sql() {
   mysql --protocol=TCP -h "$starrocks_host" -P "$starrocks_port" -u root "$@"
 }
@@ -27,6 +33,12 @@ done
 if [[ "$ready" != true ]]; then
   echo "StarRocks FE and BE did not become ready within 300 seconds." >&2
   exit 1
+fi
+
+actual_starrocks_version="$(sql -N -e 'SELECT current_version();')"
+echo "STARROCKS_VERSION=$actual_starrocks_version"
+if [[ -n "${INTEGRATION_STARROCKS_VERSION:-}" ]]; then
+  [[ "${actual_starrocks_version%%-*}" == "$INTEGRATION_STARROCKS_VERSION" ]]
 fi
 
 # Require a fresh database: this harness must prove the initial migration ran.
@@ -55,7 +67,7 @@ chmod +x "$liquibase_dir/liquibase"
 mysql_driver_version="${MYSQL_DRIVER_VERSION:-8.4.0}"
 mysql_jar="$cache_dir/mysql-connector-j-${mysql_driver_version}.jar"
 download "https://repo.maven.apache.org/maven2/com/mysql/mysql-connector-j/${mysql_driver_version}/mysql-connector-j-${mysql_driver_version}.jar" "$mysql_jar"
-jar_path="$workspace/build/integration/liquibase-starrocks.jar"
+jar_path="${INTEGRATION_JAR:-$workspace/build/integration/liquibase-starrocks.jar}"
 if [[ -n "${EXTENSION_VERSION:-}" ]]; then
   jar_path="$cache_dir/liquibase-starrocks-${EXTENSION_VERSION}.jar"
   download "https://repo.maven.apache.org/maven2/io/github/infocusmodereal/liquibase-starrocks/${EXTENSION_VERSION}/liquibase-starrocks-${EXTENSION_VERSION}.jar" "$jar_path"
@@ -64,6 +76,7 @@ if [[ ! -f "$jar_path" ]]; then
   echo "Missing integration JAR: run ./scripts/dev prepareIntegrationJar first." >&2
   exit 1
 fi
+echo "CONNECTOR_SHA256=$(sha256sum "$jar_path" | cut -d " " -f1)"
 cp "$jar_path" "$liquibase_dir/lib/"
 cp "$mysql_jar" "$liquibase_dir/lib/"
 
@@ -111,3 +124,5 @@ run_liquibase after-recovery update
 assert_unlocked
 
 echo "Integration passed: migration, idempotence, checksum recovery and abandoned-lock recovery ($liquibase_version)."
+
+source integration/run-capabilities.sh

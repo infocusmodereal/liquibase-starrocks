@@ -37,17 +37,13 @@ class UnlockDatabaseChangelogStarRocks : UnlockDatabaseChangeLogGenerator() {
         database: Database,
         sqlGeneratorChain: SqlGeneratorChain<UnlockDatabaseChangeLogStatement>
     ): Array<Sql> {
-        val tableName = database.databaseChangeLogLockTableName
-        val schemaName = database.defaultSchemaName
+        val tableName = database.escapeTableName(
+            database.liquibaseCatalogName, database.liquibaseSchemaName, database.databaseChangeLogLockTableName
+        )
 
         // Use standard UPDATE syntax for StarRocks
-        val unlockQuery = """
-            UPDATE `$schemaName`.$tableName 
-            SET LOCKED = false, 
-                LOCKEDBY = null, 
-                LOCKGRANTED = null 
-            WHERE ID = 1 AND LOCKED = true
-        """.trimIndent()
+        val unlockQuery = "UPDATE $tableName SET LOCKED = false, LOCKEDBY = null, LOCKGRANTED = null " +
+            "WHERE ID = 1 AND LOCKED = true"
 
         return arrayOf(UnparsedSql(unlockQuery))
     }

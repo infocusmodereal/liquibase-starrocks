@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="always" author="integration" runAlways="true" context="qa" labels="integration">
+        <preConditions onFail="HALT"><sqlCheck expectedResult="1">SELECT 1</sqlCheck></preConditions>
+        <sql>INSERT INTO flag_events VALUES (1)</sql>
+    </changeSet>
+    <changeSet id="on-change" author="integration" runOnChange="true" context="qa" labels="integration">
+        <sql>CREATE OR REPLACE VIEW flag_view AS SELECT ${viewValue} AS value</sql>
+        <rollback>DROP VIEW flag_view</rollback>
+    </changeSet>
+</databaseChangeLog>

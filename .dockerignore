@@ -11,3 +11,6 @@
 !integration/run-integration.sh
 !integration/changelog.yaml
 !integration/liquibase.properties
+!integration/run-capabilities.sh
+!integration/changelogs/
+!integration/changelogs/**

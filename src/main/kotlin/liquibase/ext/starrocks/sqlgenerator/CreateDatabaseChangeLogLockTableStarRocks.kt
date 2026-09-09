@@ -15,6 +15,7 @@ package liquibase.ext.starrocks.sqlgenerator
 
 import liquibase.database.Database
 import liquibase.ext.starrocks.database.StarRocksDatabase
+import liquibase.ext.starrocks.configuration.StarRocksConfiguration
 import liquibase.ext.starrocks.params.StarRocksTableParams
 import liquibase.sql.Sql
 import liquibase.sql.UnparsedSql
@@ -39,24 +40,24 @@ class CreateDatabaseChangeLogLockTableStarRocks : CreateDatabaseChangeLogLockTab
         database: Database,
         sqlGeneratorChain: SqlGeneratorChain<CreateDatabaseChangeLogLockTableStatement>
     ): Array<Sql> {
-        val tableName = database.databaseChangeLogLockTableName
+        val tableName = database.escapeTableName(
+            database.liquibaseCatalogName, database.liquibaseSchemaName, database.databaseChangeLogLockTableName
+        )
         val tableParams = StarRocksTableParams()
         tableParams.engine = "OLAP"
         tableParams.key_desc = "ID"
         tableParams.distributedBy = "HASH(ID) BUCKETS 1"
-        tableParams.properties = mapOf("replication_num" to "1")
+        tableParams.properties = mapOf("replication_num" to StarRocksConfiguration.metadataReplication())
 
         // StarRocks syntax for creating a table with a primary key
         // See: https://docs.starrocks.io/docs/sql-reference/sql-statements/table_bucket_part_index/CREATE_TABLE/
-        val createTableQuery = """
-            CREATE TABLE IF NOT EXISTS `${database.defaultSchemaName}`.${tableName} (
-                ID INT NOT NULL,
-                LOCKED TINYINT NOT NULL,
-                LOCKGRANTED DATETIME,
-                LOCKEDBY VARCHAR(255)
-            )
-            ${tableParams.generateSql()}
-        """.trimIndent()
+        val columns = listOf(
+            "ID INT NOT NULL",
+            "LOCKED TINYINT NOT NULL",
+            "LOCKGRANTED DATETIME",
+            "LOCKEDBY VARCHAR(255)"
+        ).joinToString(", ")
+        val createTableQuery = "CREATE TABLE IF NOT EXISTS $tableName ($columns) ${tableParams.generateSql()}"
 
         return arrayOf(UnparsedSql(createTableQuery))
     }

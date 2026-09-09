@@ -14,30 +14,36 @@
 package liquibase.ext.starrocks.sqlgenerator
 
 import liquibase.database.Database
+import liquibase.exception.UnexpectedLiquibaseException
+import liquibase.exception.ValidationErrors
 import liquibase.ext.starrocks.database.StarRocksDatabase
 import liquibase.sql.Sql
 import liquibase.sqlgenerator.SqlGeneratorChain
 import liquibase.sqlgenerator.core.ModifyDataTypeGenerator
 import liquibase.statement.core.ModifyDataTypeStatement
 
-/**
- * No-op implementation to prevent Liquibase from trying to modify the changelog table column sizes.
- * StarRocks uses VARCHAR type for strings, not CHAR(N) or similar fixed-length types.
- */
+/** Reject changes whose asynchronous completion and column attributes cannot be preserved. */
 class ModifyDataTypeStarRocks : ModifyDataTypeGenerator() {
+    companion object {
+        const val MESSAGE = "StarRocks modifyDataType is not supported. Use an explicit SQL changeset " +
+            "that preserves column attributes and verify SHOW ALTER TABLE completion before continuing."
+    }
 
     override fun getPriority(): Int = PRIORITY_DATABASE
 
     override fun supports(statement: ModifyDataTypeStatement, database: Database): Boolean =
         database is StarRocksDatabase
 
+    override fun validate(
+        statement: ModifyDataTypeStatement,
+        database: Database,
+        sqlGeneratorChain: SqlGeneratorChain<*>
+    ): ValidationErrors = super.validate(statement, database, sqlGeneratorChain).addError(MESSAGE)
+
     @Suppress("ACCIDENTAL_OVERRIDE")
     override fun generateSql(
         statement: ModifyDataTypeStatement,
         database: Database,
         sqlGeneratorChain: SqlGeneratorChain<ModifyDataTypeStatement>
-    ): Array<Sql> {
-        // Return empty array to prevent any SQL from being executed
-        return emptyArray()
-    }
+    ): Array<Sql> = throw UnexpectedLiquibaseException(MESSAGE)
 }

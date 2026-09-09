@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: failed-migration
+      author: integration
+      changes:
+        - sql:
+            sql: SELECT deliberately_missing_column FROM plugin_integration;
