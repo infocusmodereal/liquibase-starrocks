@@ -1,6 +1,6 @@
 # 0.3 capabilities
 
-This is the intended contract exercised by `integration/run-capabilities.sh`
+This is the contract exercised by `integration/run-capabilities.sh`
 and the upstream harness. A combination becomes verified only when its exact
 result is recorded in [COMPATIBILITY.md](../COMPATIBILITY.md).
 

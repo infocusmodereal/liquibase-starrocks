@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0 (2026-09-09 UTC)
 
 - Reject silent `modifyDataType` operations with actionable validation errors.
 - Add `createStarRocksTable` for explicit PRIMARY/DUPLICATE OLAP layouts.
@@ -23,7 +23,8 @@ Seven exact compatibility combinations passed with the candidate JAR, along
 with the official harness on amd64/arm64 and an independent signed-artifact
 integration run. See [COMPATIBILITY.md](COMPATIBILITY.md) and the
 [release verification record](compatibility/0.3.0-verification.json).
-The candidate is ready; this section does not announce publication.
+Published to Maven Central and GitHub. All four public Maven artifact hashes
+match the validated signed bundle.
 
 ## 0.2.0 (2026-09-08)
 

@@ -213,7 +213,9 @@ both architectures. Every CI JAR matches the signed candidate byte for byte;
 that signed JAR also passed the full local suite. A clean checkout reproduced
 the JAR without maintainer files. Four signatures and all artifact/bundle
 checksums were verified. See [the release record](../compatibility/0.3.0-verification.json).
-Publication and public-download verification are the remaining release actions.
+Published to Maven Central and GitHub on 2026-09-09 UTC. All four public Maven
+artifacts were downloaded and matched the validated signed bundle; GitHub
+artifacts were checked as well. The 0.3 release actions are complete.
 
 Broader diff reconstruction, additional key
 models, shared-data deployment and multi-node failover remain follow-up scope.

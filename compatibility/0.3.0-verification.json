@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "version": "0.3.0",
-  "status": "ready-unpublished",
-  "recordedAt": "2026-09-08",
+  "status": "published-verified",
+  "recordedAt": "2026-09-09",
   "artifactBuildSourceCommit": "e543ad3d0e7554e6b5ccb8fdaa63379f4f0f71a8",
   "validationScriptCommit": "f6464e1545c7b0299806caf8750fcd8ce9c882ad",
   "ciRun": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34289842299",
@@ -75,7 +75,8 @@
       "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34289842299",
       "unitTestsPassed": 24,
       "releaseCandidateVersion": "0.3.0",
-      "matchesSignedCandidateJar": true
+      "matchesSignedCandidateJar": true,
+      "publishedArtifactVersion": "0.3.0"
     },
     {
       "connectorVersion": "0.3.0-SNAPSHOT",
@@ -98,7 +99,8 @@
       "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34289842299",
       "unitTestsPassed": 24,
       "releaseCandidateVersion": "0.3.0",
-      "matchesSignedCandidateJar": true
+      "matchesSignedCandidateJar": true,
+      "publishedArtifactVersion": "0.3.0"
     },
     {
       "connectorVersion": "0.3.0-SNAPSHOT",
@@ -121,7 +123,8 @@
       "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34289842299",
       "unitTestsPassed": 24,
       "releaseCandidateVersion": "0.3.0",
-      "matchesSignedCandidateJar": true
+      "matchesSignedCandidateJar": true,
+      "publishedArtifactVersion": "0.3.0"
     },
     {
       "connectorVersion": "0.3.0-SNAPSHOT",
@@ -144,7 +147,8 @@
       "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34289842299",
       "unitTestsPassed": 24,
       "releaseCandidateVersion": "0.3.0",
-      "matchesSignedCandidateJar": true
+      "matchesSignedCandidateJar": true,
+      "publishedArtifactVersion": "0.3.0"
     },
     {
       "connectorVersion": "0.3.0-SNAPSHOT",
@@ -167,7 +171,8 @@
       "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34289842299",
       "unitTestsPassed": 24,
       "releaseCandidateVersion": "0.3.0",
-      "matchesSignedCandidateJar": true
+      "matchesSignedCandidateJar": true,
+      "publishedArtifactVersion": "0.3.0"
     },
     {
       "connectorVersion": "0.3.0-SNAPSHOT",
@@ -196,7 +201,8 @@
         "liquibase": "5.0.3",
         "testsPassed": 1,
         "scenario": "native PRIMARY creation, expected SQL, snapshot and rollback"
-      }
+      },
+      "publishedArtifactVersion": "0.3.0"
     },
     {
       "connectorVersion": "0.3.0-SNAPSHOT",
@@ -225,7 +231,8 @@
         "liquibase": "5.0.3",
         "testsPassed": 1,
         "scenario": "native PRIMARY creation, expected SQL, snapshot and rollback"
-      }
+      },
+      "publishedArtifactVersion": "0.3.0"
     },
     {
       "connectorVersion": "0.3.0",
@@ -245,17 +252,52 @@
       "scenarioSet": "migration-capabilities-v2",
       "result": "passed",
       "validatedAt": "2026-09-08T23:19:19.545412+00:00",
-      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/pull/9",
+      "evidence": "https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.3.0",
       "buildSourceCommit": "e543ad3d0e7554e6b5ccb8fdaa63379f4f0f71a8",
-      "evidenceKind": "maintainer-local-record; log attached to draft release",
+      "evidenceKind": "maintainer-local-record; public release log",
       "logAsset": "signed-integration-final.log",
-      "logSha256": "9fab0f6becb8bef2885e298fced71bfcf8b1ec3b062deabecdd61dd60be97990"
+      "logSha256": "9fab0f6becb8bef2885e298fced71bfcf8b1ec3b062deabecdd61dd60be97990",
+      "publishedArtifactVersion": "0.3.0",
+      "verificationRecord": "https://github.com/infocusmodereal/liquibase-starrocks/releases/download/v0.3.0/release-verification.json"
     }
   ],
   "publication": {
-    "mavenCentral": "not uploaded or published",
-    "github": "draft only",
-    "publicDownloadVerification": "pending publication"
+    "mavenCentral": "PUBLISHED",
+    "deploymentId": "499dcbf3-0471-4cb9-83b0-64aa4b621961",
+    "publishedObservedAt": "2026-09-09T02:18:46.668075+00:00",
+    "github": "published",
+    "githubPublishedAt": "2026-09-09T02:09:13Z",
+    "githubReleaseUrl": "https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.3.0",
+    "publicDownloadVerification": {
+      "verifiedAt": "2026-09-09T02:18:17.214086+00:00",
+      "artifacts": [
+        {
+          "file": "liquibase-starrocks-0.3.0.jar",
+          "url": "https://repo.maven.apache.org/maven2/io/github/infocusmodereal/liquibase-starrocks/0.3.0/liquibase-starrocks-0.3.0.jar",
+          "sha256": "f2a6298079658d9d9afa1b054426375d313e21e2ce967682b9e0de2397c35b58",
+          "verified": true
+        },
+        {
+          "file": "liquibase-starrocks-0.3.0-sources.jar",
+          "url": "https://repo.maven.apache.org/maven2/io/github/infocusmodereal/liquibase-starrocks/0.3.0/liquibase-starrocks-0.3.0-sources.jar",
+          "sha256": "f2af75b85b6712a9ac1a04f591b3939b913a177953c214a30a9ba245cb2ff544",
+          "verified": true
+        },
+        {
+          "file": "liquibase-starrocks-0.3.0-javadoc.jar",
+          "url": "https://repo.maven.apache.org/maven2/io/github/infocusmodereal/liquibase-starrocks/0.3.0/liquibase-starrocks-0.3.0-javadoc.jar",
+          "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3",
+          "verified": true
+        },
+        {
+          "file": "liquibase-starrocks-0.3.0.pom",
+          "url": "https://repo.maven.apache.org/maven2/io/github/infocusmodereal/liquibase-starrocks/0.3.0/liquibase-starrocks-0.3.0.pom",
+          "sha256": "d85f954825c07f5fbe14295de8f934a78ff1475bd9ea24cf34fba408614e1c7e",
+          "verified": true
+        }
+      ]
+    },
+    "githubArtifactsVerified": true
   },
   "limitations": [
     "Only exact recorded combinations and named scenarios were exercised; unlisted patches are unverified.",
@@ -264,6 +306,14 @@
     "StarRocks 3.1.7 does not support the tested rename operation or hyphenated metadata names; those boundaries are asserted by the suite.",
     "Historical image digests were not recorded; null does not mean a pinned image.",
     "Source-built 0.3.0-SNAPSHOT CI JARs were compared byte for byte with the signed 0.3.0 candidate. Detached signatures and publication status are recorded separately.",
-    "Local evidence is distinguished from CI evidence; draft release assets become public only when published."
-  ]
+    "Local evidence is distinguished from CI evidence; release logs and verification records are attached to the public release."
+  ],
+  "mergeCommit": "8a3191d79e03ed9a78f3c22dff52903e601fbdf9",
+  "tag": "v0.3.0",
+  "tagCommit": "8a3191d79e03ed9a78f3c22dff52903e601fbdf9",
+  "postMergeCi": {
+    "url": "https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34301977500",
+    "sourceCommit": "8a3191d79e03ed9a78f3c22dff52903e601fbdf9",
+    "conclusion": "success"
+  }
 }

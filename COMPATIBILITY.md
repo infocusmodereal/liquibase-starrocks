@@ -1,11 +1,13 @@
 # Compatibility and validation
 
-## 0.3.0 release candidate
+## 0.3.0 release
 
 The candidate passed the [seven-job CI matrix](https://github.com/infocusmodereal/liquibase-starrocks/actions/runs/34289842299)
 on 2026-09-08. All seven tested JARs are byte-identical to the independently
-verified, signed 0.3.0 candidate. The candidate is ready for publication;
-Maven Central upload and public-download verification have not occurred.
+verified, signed 0.3.0 candidate. Version 0.3.0 was published to Maven Central and GitHub on 2026-09-09 UTC.
+All four public Maven artifacts (plugin, sources, Javadoc and POM) were downloaded
+and their SHA-256 hashes matched the signed bundle. Public GitHub artifacts
+were also checked. See the [release](https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.3.0).
 
 | Liquibase runtime | StarRocks | Java | Architecture | Unit tests | Capability suite |
 | --- | --- | --- | --- | --- | --- |
@@ -140,7 +142,7 @@ Published 0.2.0 is the separate signed release, built with
 ## Versioned compatibility registry
 
 [compatibility/releases.json](compatibility/releases.json) records the exact
-0.2.0 and 0.3.0 candidate combinations, including whether evidence applies to
+0.2.0 and 0.3.0 combinations, including whether evidence applies to
 source-built code or a signed artifact. Earlier 0.1.x evidence remains in this
 document; the registry does not reconstruct missing historical provenance.
 
@@ -151,4 +153,4 @@ Missing image digests and local reports are identified explicitly.
 
 The [0.3 roadmap](docs/roadmap-0.3.md) retains the original proposal and records
 its implementation. Candidate versions become verified only after actual results
-are recorded. Passing 0.3.0 evidence above does not announce publication.
+are recorded. The 0.3.0 publication record above includes verification of the public files.

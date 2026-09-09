@@ -2,18 +2,17 @@
 
 Manage StarRocks migrations with Liquibase. The extension provides database
 recognition, changelog tracking, lock lifecycle handling and StarRocks SQL
-adaptations. Published release: **0.2.0**. The `feat/0.3` branch contains the
-**0.3.0 release candidate work**; it is not yet published.
+adaptations. Published release: **0.3.0**.
 
 ## Install the released extension
 
-Download the [0.2.0 JAR](https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.2.0)
+Download the [0.3.0 JAR](https://github.com/infocusmodereal/liquibase-starrocks/releases/tag/v0.3.0)
 and MySQL Connector/J **8.4.0**, and place both in your Liquibase CLI `lib/`
 directory. Java 17 is the minimum for the extension; use the exact Java and
 Liquibase versions in the [compatibility matrix](COMPATIBILITY.md).
 
 For an embedded application, add the Maven dependency
-`io.github.infocusmodereal:liquibase-starrocks:0.2.0` alongside Liquibase core.
+`io.github.infocusmodereal:liquibase-starrocks:0.3.0` alongside Liquibase core.
 The CLI JAR includes Kotlin, and excludes Liquibase core and the JDBC driver.
 
 ## Run a migration
@@ -48,11 +47,14 @@ databaseChangeLog:
 ```
 
 Run `liquibase validate`, `liquibase update-sql` and `liquibase update`.
-The database must already exist. Replication 1 is suitable for a single-node
+The database must already exist. The migration account needs CREATE VIEW and
+DROP VIEW permissions on the metadata database for the lock reservation, in
+addition to the permissions required by its migrations and metadata tables.
+Replication 1 is suitable for a single-node
 example; choose a production layout for your cluster. Rollback is an explicit
 reverse migration, not a transactional undo of StarRocks DDL.
 
-## 0.3 development
+## What's new in 0.3
 
 0.3 adds an explicit `createStarRocksTable` change, version probing, metadata
 configuration and broader validation. It rejects `modifyDataType` instead of
